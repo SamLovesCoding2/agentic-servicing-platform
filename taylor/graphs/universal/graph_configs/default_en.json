@@ -1,0 +1,87 @@
+{
+  "name": "default_en",
+  "language": "en",
+  "version": "0.1.0",
+  "modules": [
+    "knowledge",
+    "account_servicing",
+    "arrangement",
+    "sensitive_action",
+    "compliance_handoff",
+    "faq",
+    "payoff_quote",
+    "update_phone",
+    "update_address",
+    "already_paid",
+    "will_pay",
+    "make_payment",
+    "autopay",
+    "cancel_payment",
+    "insurance_intake",
+    "transfer_agent",
+    "change_language",
+    "do_not_call",
+    "down_payment",
+    "account_data",
+    "payment_plan",
+    "settlement",
+    "hardship",
+    "promise_to_pay"
+  ],
+  "primary_tools": [
+    "search_faq",
+    "get_account_overview",
+    "get_payment_methods",
+    "calculate_payoff_quote",
+    "validate_payment_proposal",
+    "schedule_payment",
+    "update_phone_number",
+    "transfer_to_agent"
+  ],
+  "channel_overrides": {
+    "sms": [
+      "search_faq",
+      "get_account_overview",
+      "get_payment_methods",
+      "calculate_payoff_quote",
+      "validate_payment_proposal",
+      "schedule_payment",
+      "update_phone_number",
+      "transfer_to_agent"
+    ],
+    "chat": [
+      "search_faq",
+      "get_account_overview",
+      "get_payment_methods",
+      "calculate_payoff_quote",
+      "validate_payment_proposal",
+      "update_phone_number",
+      "transfer_to_agent"
+    ],
+    "voice": [
+      "search_faq",
+      "get_account_overview",
+      "get_payment_methods",
+      "calculate_payoff_quote",
+      "validate_payment_proposal",
+      "schedule_payment",
+      "update_phone_number",
+      "transfer_to_agent"
+    ]
+  },
+  "output_filter": {
+    "enabled": true,
+    "replacements": {
+      "loan": "contract",
+      "loans": "contracts",
+      "lender": "creditor",
+      "borrower": "customer"
+    }
+  },
+  "loop_budget": {
+    "max_model_turns": 10,
+    "max_tool_attempts": 5,
+    "max_text_turn_seconds": 30,
+    "max_voice_turn_seconds": 15
+  }
+}

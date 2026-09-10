@@ -1,0 +1,127 @@
+services:
+  # ── Infrastructure ──────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: salient
+      POSTGRES_PASSWORD: salient
+      POSTGRES_DB: salient
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U salient"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Mock Services ───────────────────────────────────────────────────────
+  mock-fac:
+    build:
+      context: .
+      dockerfile: mocks/fac_api/Dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      FAC_API_PORT: 9000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:9000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mock-payment:
+    build:
+      context: .
+      dockerfile: mocks/Dockerfile.payment
+    ports:
+      - "9001:9001"
+    environment:
+      PAYMENT_PROVIDER_PORT: 9001
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:9001/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Observability ───────────────────────────────────────────────────────
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+
+  # ── Temporal (M2+) ──────────────────────────────────────────────────────
+  temporal:
+    image: temporalio/auto-setup:1.24
+    ports:
+      - "7233:7233"     # gRPC
+      - "8080:8080"     # Web UI
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: temporal-postgresql
+    depends_on:
+      temporal-postgresql:
+        condition: service_healthy
+    profiles: ["m2"]
+
+  temporal-postgresql:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    profiles: ["m2"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Object Storage (M4+) ────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9002"
+    ports:
+      - "9002:9002"
+      - "9003:9000"
+    environment:
+      MINIO_ROOT_USER: salient
+      MINIO_ROOT_PASSWORD: salient123
+    volumes:
+      - minio_data:/data
+    profiles: ["m4"]
+
+  # ── Voice (M5+) ─────────────────────────────────────────────────────────
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    profiles: ["m5"]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
