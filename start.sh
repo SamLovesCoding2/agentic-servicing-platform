@@ -91,4 +91,4 @@ echo "║  Commands: /auth /channel /account /tools /quit          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-python -m taylor.runtime.cli $LLM_FLAG --debug
+python -m taylor.runtime.cli $LLM_FLAG

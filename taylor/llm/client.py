@@ -104,7 +104,7 @@ class LLMClient:
                 } if response.usage else None,
             }
         except Exception as e:
-            logger.exception(f"LLM call failed: {e}")
+            logger.error(f"LLM call failed: {type(e).__name__}")
             # NEVER expose raw API errors to the customer.
             # Return a clean, safe message. The error details go in the "error" field
             # for logging and debugging, not in "content" which reaches the customer.

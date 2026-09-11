@@ -25,14 +25,26 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import os
 import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env from project root
+_project_root = Path(__file__).parent.parent.parent
+load_dotenv(_project_root / ".env")
 
 from taylor.graphs.universal.state import AuthLevel, Channel
 from taylor.runtime.text_runtime import TextRuntime
 
+# Logging: by default, send ALL logs to a file, nothing to the console.
+# Only with --debug do we show logs in the terminal.
+_log_file = Path(__file__).parent.parent.parent / "taylor.log"
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.FileHandler(_log_file)],
 )
 logger = logging.getLogger(__name__)
 
@@ -54,8 +66,13 @@ def parse_args():
 async def main():
     args = parse_args()
 
+    # Only show logs in terminal with --debug.
+    # Without --debug, all logs go to taylor.log file only — clean CLI output.
     if args.debug:
-        logging.getLogger("taylor").setLevel(logging.DEBUG)
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+        logging.getLogger().addHandler(console_handler)
 
     # Create runtime
     llm_client = None
