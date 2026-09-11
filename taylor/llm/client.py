@@ -105,12 +105,27 @@ class LLMClient:
             }
         except Exception as e:
             logger.exception(f"LLM call failed: {e}")
+            # NEVER expose raw API errors to the customer.
+            # Return a clean, safe message. The error details go in the "error" field
+            # for logging and debugging, not in "content" which reaches the customer.
+            error_type = type(e).__name__
+            if "insufficient_quota" in str(e) or "credit_balance" in str(e):
+                friendly = "I'm having trouble connecting right now. Let me transfer you to an agent who can help."
+            elif "rate_limit" in str(e).lower() or "429" in str(e):
+                friendly = "I'm experiencing high demand right now. Let me transfer you to an agent."
+            elif "timeout" in str(e).lower() or "timed out" in str(e).lower():
+                friendly = "I'm taking longer than expected. Let me transfer you to an agent."
+            elif "auth" in str(e).lower() or "401" in str(e) or "key" in str(e).lower():
+                friendly = "I'm having trouble connecting right now. Let me transfer you to an agent."
+            else:
+                friendly = "I'm having trouble right now. Let me transfer you to an agent who can help."
+
             return {
-                "content": f"I'm sorry, I encountered an error processing your request. {str(e)[:100]}",
+                "content": friendly,
                 "tool_calls": None,
                 "finish_reason": "error",
                 "usage": None,
-                "error": str(e),
+                "error": f"{error_type}: {str(e)[:200]}",
             }
 
     async def classify_intent(

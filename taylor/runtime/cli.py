@@ -200,7 +200,7 @@ async def main():
                     print(f"  [tokens: {u.get('total_tokens', '?')}]")
 
         except Exception as e:
-            print(f"\nTaylor: I'm sorry, I encountered an error. {str(e)[:200]}")
+            print(f"\nTaylor: I'm having trouble right now. Let me transfer you to an agent who can help.")
             if args.debug:
                 import traceback
                 traceback.print_exc()
