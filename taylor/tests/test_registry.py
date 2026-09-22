@@ -201,3 +201,78 @@ class TestToolInvocation:
         result = await registry.invoke("stub_execution", envelope, state)
         assert result.status == "invalid_request"
         assert "preconditions not met" in result.error
+
+
+# ── Compliance boundary (registry = execution boundary) ──────────────────────
+
+class TestComplianceBoundary:
+    """The registry evaluates every invocation against the compliance engine
+    before a tool can execute."""
+
+    @staticmethod
+    def _schedule_envelope(
+        auth_level: str = "step_up",
+        amount: str = "300.00",
+        days_out: int = 10,
+        authorization_ref: str = "auth_001",
+    ) -> ToolEnvelope:
+        from datetime import date, timedelta
+        return ToolEnvelope.create(
+            conversation_id="c", turn_id="t", customer_id="cust",
+            auth_level=auth_level, account_id="ACC-001",
+            intent_type="schedule_payment",
+            amount=amount,
+            date_value=date.today() + timedelta(days=days_out),
+            authorization_ref=authorization_ref,
+        )
+
+    async def test_zero_dollar_payment_blocked(self, registry, step_up_state):
+        """$0.00 anti-pattern killed at the boundary (MIN_AMOUNT)."""
+        envelope = self._schedule_envelope(amount="0.00")
+        result = await registry.invoke("stub_execution", envelope, step_up_state)
+        assert result.status == "rejected"
+        assert "Compliance policy blocked" in result.error
+        assert "MIN_AMOUNT" in result.error
+
+    async def test_past_dated_payment_blocked(self, registry, step_up_state):
+        envelope = self._schedule_envelope(days_out=-1)  # yesterday
+        result = await registry.invoke("stub_execution", envelope, step_up_state)
+        assert result.status == "rejected"
+        assert "SCHEDULE_WINDOW" in result.error
+
+    async def test_policy_requires_step_up(self, registry, step_up_state):
+        """Defense in depth: engine demands step-up even if the tool check passed."""
+        envelope = self._schedule_envelope(auth_level="verified")
+        result = await registry.invoke("stub_execution", envelope, step_up_state)
+        assert result.status == "invalid_request"
+        assert "requires step-up" in result.error
+
+    async def test_sms_opt_out_blocks_action(self, registry, step_up_state):
+        state = dict(step_up_state)
+        state["contact_preferences"] = {"sms_opted_out": True}
+        envelope = self._schedule_envelope()
+        result = await registry.invoke("stub_execution", envelope, state)
+        assert result.status == "rejected"
+        assert "CONTACT_PREFERENCE" in result.error
+
+    async def test_clean_schedule_passes_boundary(self, registry, step_up_state):
+        envelope = self._schedule_envelope()
+        result = await registry.invoke("stub_execution", envelope, step_up_state)
+        assert result.status == "confirmed"
+        assert result.data["executed"] is True
+
+    async def test_westpond_tighter_cap_enforced(self, registry, step_up_state):
+        state = dict(step_up_state)
+        state["tenant"] = "westpond"
+        # 1,600 > Westpond's 1,500 cap but < the global 2,000 cap → blocked.
+        envelope = self._schedule_envelope(amount="1600.00")
+        result = await registry.invoke("stub_execution", envelope, state)
+        assert result.status == "rejected"
+        assert "DAILY_CAP" in result.error
+
+    async def test_cpr_not_limited_by_westpond_cap(self, registry, step_up_state):
+        state = dict(step_up_state)
+        state["tenant"] = "cpr"
+        envelope = self._schedule_envelope(amount="1600.00")
+        result = await registry.invoke("stub_execution", envelope, state)
+        assert result.status == "confirmed"

@@ -16,6 +16,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from taylor.compliance.engine import ComplianceEngine
+from taylor.compliance.registry import default_compliance_engine
+from taylor.compliance.rules import ActionContext, RuleDecision
 from taylor.tools.base import BaseTool, ExecutionTool
 from taylor.tools.envelope import ToolClass, ToolEnvelope, ToolResult
 
@@ -31,11 +34,20 @@ class ToolRegistry:
     - Read tools are always available (once authenticated)
     - Proposal tools are available when preconditions are met
     - Execution tools are HIDDEN until preconditions are met
+
+    The registry is also the compliance boundary: every invocation is
+    evaluated against the compliance engine before it can execute.
     """
 
-    def __init__(self):
+    def __init__(self, compliance_engine: ComplianceEngine | None = None):
         self._tools: dict[str, BaseTool] = {}
         self._channel_overrides: dict[str, set[str]] = {}  # channel -> allowed tool names
+        self._compliance = compliance_engine or default_compliance_engine()
+
+    @property
+    def compliance_engine(self) -> ComplianceEngine:
+        """The compliance engine used at the execution boundary."""
+        return self._compliance
 
     def register(self, tool: BaseTool) -> None:
         """Register a tool."""
@@ -122,6 +134,29 @@ class ToolRegistry:
                 error=f"Tool preconditions not met: {tool_name}",
             )
 
+        # Compliance boundary: every invocation is evaluated against policy.
+        # Strictest-wins + fail-closed; a blocked action never reaches the tool.
+        policy = self._evaluate_policy(envelope, state)
+        if policy.blocked:
+            reasons = ", ".join(
+                f"{m.rule_id}:{m.reason_code}"
+                for m in policy.matched
+                if m.decision in (RuleDecision.DENY, RuleDecision.REQUIRE_AGENT)
+            )
+            return ToolResult(
+                action_id=envelope.action_id,
+                status="rejected",
+                error=f"Compliance policy blocked action: {reasons}",
+                data={"policy": policy.to_dict()},
+            )
+        if policy.requires_step_up:
+            return ToolResult(
+                action_id=envelope.action_id,
+                status="invalid_request",
+                error="Compliance policy requires step-up authentication",
+                data={"policy": policy.to_dict()},
+            )
+
         # For execution tools, validate authorization
         if isinstance(tool, ExecutionTool):
             auth_error = tool.validate_authorization(envelope)
@@ -147,6 +182,33 @@ class ToolRegistry:
                 status="retryable_failure",
                 error=f"Tool execution failed: {e}",
             )
+
+    def _evaluate_policy(self, envelope: ToolEnvelope, state: dict[str, Any]) -> Any:
+        """Evaluate the compliance engine for this invocation.
+
+        Builds an ActionContext from server-derived envelope fields (identity,
+        amount, date) plus any policy context the state carries (tenant,
+        account state, contact preferences, existing arrangements).
+        """
+        channel = state.get("channel", "sms")
+        if hasattr(channel, "value"):
+            channel = channel.value
+
+        context = ActionContext(
+            action_type=envelope.intent.type,
+            tenant=str(state.get("tenant", "westpond")),
+            channel=str(channel),
+            auth_level=envelope.actor.auth_level,
+            customer_id=envelope.actor.customer_id,
+            account_id=envelope.actor.account_id,
+            amount=envelope.intent.amount,
+            scheduled_date=envelope.intent.date,
+            account_state=str(state.get("account_state", "")),
+            existing_arrangements=int(state.get("existing_arrangements", 0) or 0),
+            contact_preferences=dict(state.get("contact_preferences", {}) or {}),
+            disclosures=tuple(state.get("disclosures", ()) or ()),
+        )
+        return self._compliance.evaluate(context)
 
     def all_tool_names(self) -> list[str]:
         """Get all registered tool names."""

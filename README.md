@@ -133,6 +133,30 @@ python -m mocks.fac_api.app
 python -m mocks.payment_provider
 ```
 
+### Running the Web Chat Channel (M4)
+
+```bash
+# Deterministic mode (no LLM credits consumed)
+MARSHALL_LLM_ENABLED=0 uvicorn marshall.app.main:app --port 8000
+
+# With LLM (requires OPENAI_API_KEY in .env; auto-detected)
+uvicorn marshall.app.main:app --port 8000
+```
+
+Then open <http://localhost:8000/chat> for the demo widget, or use the API:
+
+```bash
+curl -X POST http://localhost:8000/api/chat/sessions \
+  -H "Content-Type: application/json" -d '{"customer_id":"cust_demo_001"}'
+
+curl -X POST http://localhost:8000/api/chat/sessions/<session_id>/messages \
+  -H "Content-Type: application/json" -d '{"message":"What is my balance?"}'
+```
+
+Chat is architecturally barred from payment execution: the router blocks
+`sensitive_action` on the chat channel and the channel tool override omits
+`schedule_payment`.
+
 ## Project Structure
 
 ```
@@ -156,10 +180,10 @@ salient-replica/
 
 | Milestone | Status | Description |
 |---|---|---|
-| M1 | ✅ Current | Core agent graph + tool architecture + state management |
-| M2 | Planned | Compliance engine + Temporal durable orchestration |
+| M1 | ✅ | Core agent graph + tool architecture + state management |
+| M2 | 🚧 In progress | **Compliance engine done** (stateless, strictest-wins, fail-closed); Temporal durable orchestration pending |
 | M3 | Planned | SMS channel (Twilio/webhook) |
-| M4 | Planned | Web Chat channel (browser widget + JWT auth) |
+| M4 | 🚧 In progress | **Web chat channel done** (session + message API, `/chat` demo widget, payments blocked on chat); JWT auth pending |
 | M5 | Planned | Voice channel (LiveKit + ASR/TTS) |
 | M6 | Planned | Observability + evaluation framework |
 

@@ -121,6 +121,8 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "Versioned Authorization Artifacts", status: "operational", detail: "Binds actor + amount + date + method; invalidates on any field change" },
   { component: "Intent Router", status: "operational", detail: "Deterministic with channel + auth constraint validation, compliance preemption" },
   { component: "Evidence Completion Gate", status: "operational", detail: "Success language blocked until CONFIRMED persisted; UNKNOWN → 'pending' only" },
+  { component: "Compliance Engine", status: "operational", detail: "Stateless, strictest-wins, fail-closed: daily caps, scheduling window, opt-outs, state exclusions — enforced at the execution boundary" },
+  { component: "Web Chat Channel", status: "operational", detail: "FastAPI session + message API wired to the agent runtime; payment execution blocked on chat; /chat demo widget" },
   { component: "Output Filter", status: "operational", detail: "Word-boundary, case-preserving, streaming-safe (loan → contract)" },
   { component: "Mock FAC API", status: "running", detail: "3 fake accounts (Westpond, CPR tenants) with payment methods and negotiation rules" },
   { component: "Mock Payment Provider", status: "running", detail: "Deterministic by action_id, simulates timeouts for UNKNOWN state testing" },

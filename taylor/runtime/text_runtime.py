@@ -101,6 +101,7 @@ class TextRuntime:
         llm_client: LLMClient | None = None,
         database=None,
         max_tool_attempts: int = 5,
+        force_deterministic: bool = False,
     ):
         self._config = load_graph_config(config_name)
         self._registry = build_tool_registry(self._config)
@@ -112,8 +113,13 @@ class TextRuntime:
         output_filter_config = self._config.get("output_filter", {})
         replacements = output_filter_config.get("replacements") if output_filter_config.get("enabled") else None
 
-        # Auto-create LLM client if API key is available
-        if llm_client is None and os.environ.get("OPENAI_API_KEY"):
+        # Auto-create LLM client if API key is available (unless explicitly
+        # disabled or an explicit client was supplied).
+        if (
+            llm_client is None
+            and not force_deterministic
+            and os.environ.get("OPENAI_API_KEY")
+        ):
             llm_client = LLMClient()
 
         self._coordinator = TurnCoordinator(
