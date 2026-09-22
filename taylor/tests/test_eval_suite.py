@@ -18,16 +18,12 @@ Each case has: ID, category, description, input, expected result, and assertion.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from typing import Any
-
-import pytest
 
 from taylor.graphs.universal.completion_gate import (
     can_use_success_language,
     completion_gate,
-    validate_exit,
 )
 from taylor.graphs.universal.router import (
     Route,
@@ -46,9 +42,8 @@ from taylor.graphs.universal.state import (
 )
 from taylor.output.output_filter import filter_output
 from taylor.tools.base import ExecutionTool, ProposalTool, ReadTool
-from taylor.tools.envelope import ToolActor, ToolEnvelope, ToolIntent, ToolResult
+from taylor.tools.envelope import ToolEnvelope, ToolIntent, ToolResult
 from taylor.tools.registry import ToolRegistry
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

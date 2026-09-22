@@ -10,9 +10,7 @@ Verifies:
 
 from __future__ import annotations
 
-import pytest
-
-from taylor.output.output_filter import filter_output, make_filter, DEFAULT_REPLACEMENTS
+from taylor.output.output_filter import filter_output, make_filter
 
 
 class TestWordBoundary:
@@ -78,6 +76,8 @@ class TestStreamingSafe:
         filtered2 = filter_output(chunk2)
         assert "contract" in filtered1
         assert "loan" not in filtered1
+        # The second chunk has no filterable words — it must pass through intact.
+        assert filtered2 == "payment is due"
 
     def test_empty_string(self):
         assert filter_output("") == ""

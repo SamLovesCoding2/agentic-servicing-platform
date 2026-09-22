@@ -46,8 +46,6 @@ def collect_protected_node(state: dict[str, Any]) -> dict[str, Any]:
     The graph receives a placeholder or opaque payment-method token,
     NEVER PAN, CVV, PIN, bank number, or raw digits.
     """
-    channel = state.get("channel")
-
     # Simulate protected collection
     mock_token = f"pm_protected_{uuid4().hex[:12]}"
 

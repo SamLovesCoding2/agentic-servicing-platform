@@ -32,7 +32,6 @@ def retrieve_node(state: dict[str, Any]) -> dict[str, Any]:
     Retrieval node. Calls the search_faq tool to find relevant answers.
     In production, this would use vector search over a knowledge base.
     """
-    utterance = state.get("utterance", "")
     # The actual tool invocation would happen here via the registry.
     # For the graph structure, we just mark the route and exit state.
     # The turn coordinator handles actual tool execution.

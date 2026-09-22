@@ -22,23 +22,20 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from taylor.graphs.subgraphs.compliance_handoff import (
-    build_compliance_handoff_subgraph,
-    detect_compliance_phrase,
-)
-from taylor.graphs.subgraphs.knowledge import build_knowledge_subgraph
 from taylor.graphs.subgraphs.account_servicing import build_account_servicing_subgraph
 from taylor.graphs.subgraphs.arrangement import build_arrangement_subgraph
+from taylor.graphs.subgraphs.compliance_handoff import (
+    build_compliance_handoff_subgraph,
+)
+from taylor.graphs.subgraphs.knowledge import build_knowledge_subgraph
 from taylor.graphs.subgraphs.sensitive_action import build_sensitive_action_subgraph
 from taylor.graphs.universal.completion_gate import completion_gate
-from taylor.graphs.universal.router import Route, route as route_fn
+from taylor.graphs.universal.router import Route
+from taylor.graphs.universal.router import route as route_fn
 from taylor.graphs.universal.state import (
-    AuthLevel,
-    Channel,
     GraphState,
     SubgraphExit,
 )
-
 
 # ── Preconditions ─────────────────────────────────────────────────────────────
 
@@ -54,7 +51,6 @@ def preconditions_node(state: dict[str, Any]) -> dict[str, Any]:
     """
     conversation_id = state.get("conversation_id")
     customer_id = state.get("customer_id")
-    channel = state.get("channel")
 
     if not conversation_id or not customer_id:
         return {

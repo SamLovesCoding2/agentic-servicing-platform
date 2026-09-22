@@ -25,18 +25,18 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
-import os
 import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load .env from project root
+# Load .env from project root BEFORE importing app modules, so config values
+# are present at import time.
 _project_root = Path(__file__).parent.parent.parent
 load_dotenv(_project_root / ".env")
 
-from taylor.graphs.universal.state import AuthLevel, Channel
-from taylor.runtime.text_runtime import TextRuntime
+from taylor.graphs.universal.state import AuthLevel, Channel  # noqa: E402
+from taylor.runtime.text_runtime import TextRuntime  # noqa: E402
 
 # Logging: by default, send ALL logs to a file, nothing to the console.
 # Only with --debug do we show logs in the terminal.
@@ -159,13 +159,13 @@ async def main():
                     auth_level = AuthLevel(arg)
                     print(f"  → Auth level set to: {auth_level.value}")
                 except ValueError:
-                    print(f"  → Invalid auth level. Use: anonymous, verified, step_up")
+                    print("  → Invalid auth level. Use: anonymous, verified, step_up")
             elif cmd == "/channel":
                 try:
                     channel = Channel(arg)
                     print(f"  → Channel set to: {channel.value}")
                 except ValueError:
-                    print(f"  → Invalid channel. Use: sms, chat, voice")
+                    print("  → Invalid channel. Use: sms, chat, voice")
             elif cmd == "/account":
                 account_id = arg
                 print(f"  → Account set to: {account_id}")
@@ -216,8 +216,8 @@ async def main():
                     u = result["usage"]
                     print(f"  [tokens: {u.get('total_tokens', '?')}]")
 
-        except Exception as e:
-            print(f"\nTaylor: I'm having trouble right now. Let me transfer you to an agent who can help.")
+        except Exception:
+            print("\nTaylor: I'm having trouble right now. Let me transfer you to an agent who can help.")
             if args.debug:
                 import traceback
                 traceback.print_exc()

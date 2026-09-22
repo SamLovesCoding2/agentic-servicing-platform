@@ -16,8 +16,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from taylor.graphs.universal.state import AuthLevel, Channel, GraphState
-
+from taylor.graphs.universal.state import AuthLevel, Channel
 
 # ── Route definitions ─────────────────────────────────────────────────────────
 

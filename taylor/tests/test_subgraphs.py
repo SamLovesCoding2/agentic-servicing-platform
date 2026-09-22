@@ -9,21 +9,17 @@ Verifies:
 
 from __future__ import annotations
 
-import pytest
-
+from taylor.graphs.subgraphs.account_servicing import ACCOUNT_SERVICING_CONTRACT
+from taylor.graphs.subgraphs.arrangement import ARRANGEMENT_CONTRACT
+from taylor.graphs.subgraphs.compliance_handoff import COMPLIANCE_HANDOFF_CONTRACT
+from taylor.graphs.subgraphs.knowledge import KNOWLEDGE_CONTRACT
+from taylor.graphs.subgraphs.sensitive_action import SENSITIVE_ACTION_CONTRACT
 from taylor.graphs.universal.completion_gate import (
-    SUBGRAPH_VALID_EXITS,
     can_use_success_language,
     completion_gate,
     validate_exit,
 )
 from taylor.graphs.universal.state import ActionStatus, SubgraphExit
-from taylor.graphs.subgraphs.knowledge import KNOWLEDGE_CONTRACT
-from taylor.graphs.subgraphs.account_servicing import ACCOUNT_SERVICING_CONTRACT
-from taylor.graphs.subgraphs.arrangement import ARRANGEMENT_CONTRACT
-from taylor.graphs.subgraphs.sensitive_action import SENSITIVE_ACTION_CONTRACT
-from taylor.graphs.subgraphs.compliance_handoff import COMPLIANCE_HANDOFF_CONTRACT
-
 
 # ── Contract definition tests ─────────────────────────────────────────────────
 

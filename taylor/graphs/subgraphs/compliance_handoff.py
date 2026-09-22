@@ -19,7 +19,6 @@ from langgraph.graph import END, StateGraph
 
 from taylor.graphs.universal.state import GraphState, SubgraphExit
 
-
 # Compliance-sensitive phrases that require special handling
 COMPLIANCE_PHRASES: list[str] = [
     "death",

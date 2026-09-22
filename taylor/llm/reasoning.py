@@ -17,7 +17,6 @@ deterministic safety boundaries.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
 from typing import Any
 
 from taylor.graphs.universal.state import (
@@ -265,8 +264,6 @@ class ReasoningEngine:
         date_value = tool_args.get("date")
         method_token = tool_args.get("method_token")
         operation = tool_args.get("operation")
-        extra = {k: v for k, v in tool_args.items()
-                 if k not in ("amount", "date", "method_token", "operation")}
 
         # Get authorization ref from state if available
         auth_artifact = state.get("authorization_artifact")

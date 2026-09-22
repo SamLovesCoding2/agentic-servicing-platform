@@ -2,6 +2,14 @@
 
 A functional replica of a production conversational AI system for regulated customer interactions. Built with deterministic safety boundaries around nondeterministic LLM reasoning.
 
+[![CI — Backend](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml/badge.svg?job=backend)](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml)
+[![CI — Frontend](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml/badge.svg?job=frontend)](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml)
+
+## Documentation
+
+- [Technical Architecture](docs/technical-architecture.md) — 21-section deep dive: topology, auth, tool envelope, state machine, compliance, observability
+- [Local Running Guide & Limitations](docs/local-limitations.md) — run everything locally for free; what costs money and what doesn't
+
 ## Architecture
 
 The system separates nondeterministic reasoning (LLM) from deterministic boundaries (code). The model interprets language and proposes actions. Code decides whether actions are allowed, validates inputs, executes exactly once, records evidence, and decides what the customer may safely be told.
@@ -137,7 +145,10 @@ salient-replica/
 │   └── output/        # Deterministic output filter
 ├── mocks/             # Mock external services (FAC API, payment provider)
 ├── infra/             # Infrastructure configs (postgres, temporal, jaeger)
+├── docs/              # Architecture docs + local running guide
 ├── evals/             # Evaluation framework (M6+)
+├── frontend/          # React/TypeScript agent graph visualizer
+├── .github/           # CI (pytest, ruff, frontend build)
 └── docker-compose.yml
 ```
 

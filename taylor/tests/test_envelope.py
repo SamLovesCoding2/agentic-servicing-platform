@@ -15,9 +15,6 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-import pytest
-from pydantic import ValidationError
-
 from taylor.tools.envelope import ToolActor, ToolEnvelope, ToolIntent, ToolResult
 
 

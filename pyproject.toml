@@ -46,6 +46,11 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
+# E501: long lines in tests (URLs, assertion messages) are kept for readability.
+# UP042: keep `str, Enum` mixins — `str(member)` returns the bare value, stable
+# across Python 3.11/3.12; `enum.StrEnum` changes `str()` semantics in 3.12 and
+# would alter serialized state, which is persisted as JSON.
+ignore = ["E501", "UP042"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

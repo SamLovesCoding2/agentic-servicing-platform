@@ -11,8 +11,6 @@ Verifies:
 
 from __future__ import annotations
 
-import pytest
-
 from taylor.graphs.universal.router import (
     Route,
     classify_intent,
@@ -20,7 +18,6 @@ from taylor.graphs.universal.router import (
     validate_route,
 )
 from taylor.graphs.universal.state import AuthLevel, Channel
-
 
 # ── Classifier tests ──────────────────────────────────────────────────────────
 

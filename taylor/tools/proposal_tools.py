@@ -12,10 +12,9 @@ from decimal import Decimal
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, Field
 
 from taylor.tools.base import ProposalTool
-from taylor.tools.envelope import ToolEnvelope, ToolPrecondition, ToolResult
+from taylor.tools.envelope import ToolEnvelope, ToolResult
 
 
 class CalculatePayoffQuoteTool(ProposalTool):

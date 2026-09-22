@@ -11,7 +11,7 @@ Rewrites customer-facing text in code, not via prompts.
 from __future__ import annotations
 
 import re
-from typing import Callable
+from collections.abc import Callable
 
 
 def _preserve_case(original: str, replacement: str) -> str:

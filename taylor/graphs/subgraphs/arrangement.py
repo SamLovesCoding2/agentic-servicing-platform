@@ -17,7 +17,7 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from taylor.graphs.universal.state import AuthLevel, GraphState, SubgraphExit
+from taylor.graphs.universal.state import GraphState, SubgraphExit
 
 
 def normalize_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -25,7 +25,6 @@ def normalize_node(state: dict[str, Any]) -> dict[str, Any]:
     Normalize the proposal: parse amounts, resolve dates, canonicalize identifiers.
     The model proposes; deterministic code normalizes.
     """
-    utterance = state.get("utterance", "")
     return {
         "route": "arrangement",
         "action_status": "NORMALIZED",

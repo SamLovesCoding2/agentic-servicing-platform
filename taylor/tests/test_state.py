@@ -13,18 +13,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-import pytest
-
 from taylor.graphs.universal.state import (
     ActionStatus,
-    AuthLevel,
-    Channel,
-    SubgraphExit,
     compare_and_set,
     merge_slots,
     replace,
 )
-
 
 # ── merge_slots tests ────────────────────────────────────────────────────────
 

@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field
 from taylor.tools.base import ReadTool
 from taylor.tools.envelope import ToolEnvelope, ToolResult
 
-
 # ── Mock knowledge base ──────────────────────────────────────────────────────
 
 MOCK_FAQ: list[dict[str, str]] = [
