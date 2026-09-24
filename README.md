@@ -157,6 +157,32 @@ Chat is architecturally barred from payment execution: the router blocks
 `sensitive_action` on the chat channel and the channel tool override omits
 `schedule_payment`.
 
+### Running Temporal Durable Workflows (M2)
+
+Start a Temporal server with the `m2` compose profile, then run the worker:
+
+```bash
+docker compose --profile m2 up -d temporal
+# worker in a terminal:
+python -m taylor.orchestration.worker
+# schedule an arrangement workflow in another:
+python -m taylor.orchestration.client schedule \
+  --arrangement-id ARR-001 --account-id ACC-001 \
+  --amount 300.00 --date 2026-10-05 --action-id py-test-001
+```
+
+The workflows are:
+- `PaymentArrangementWorkflow` — compliance gate → durable wait until the
+  scheduled date → submit → reconcile UNKNOWN with durable backoff.
+- `ReconcilePaymentWorkflow` — standalone recovery for actions stuck in UNKNOWN.
+
+Workflow integration tests run hermetic against Temporal's time-skipping
+test environment (no server needed):
+
+```bash
+TEMPORAL_INTEGRATION=1 pytest taylor/tests/test_orchestration.py -q
+```
+
 ## Project Structure
 
 ```
@@ -181,7 +207,7 @@ salient-replica/
 | Milestone | Status | Description |
 |---|---|---|
 | M1 | ✅ | Core agent graph + tool architecture + state management |
-| M2 | 🚧 In progress | **Compliance engine done** (stateless, strictest-wins, fail-closed); Temporal durable orchestration pending |
+| M2 | 🚧 In progress | **Compliance engine done** (stateless, strictest-wins, fail-closed); **Temporal durable workflows done** (payment arrangement + UNKNOWN reconciliation) |
 | M3 | Planned | SMS channel (Twilio/webhook) |
 | M4 | 🚧 In progress | **Web chat channel done** (session + message API, `/chat` demo widget, payments blocked on chat); JWT auth pending |
 | M5 | Planned | Voice channel (LiveKit + ASR/TTS) |

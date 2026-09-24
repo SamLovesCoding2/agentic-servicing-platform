@@ -122,6 +122,7 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "Intent Router", status: "operational", detail: "Deterministic with channel + auth constraint validation, compliance preemption" },
   { component: "Evidence Completion Gate", status: "operational", detail: "Success language blocked until CONFIRMED persisted; UNKNOWN → 'pending' only" },
   { component: "Compliance Engine", status: "operational", detail: "Stateless, strictest-wins, fail-closed: daily caps, scheduling window, opt-outs, state exclusions — enforced at the execution boundary" },
+  { component: "Temporal Durable Workflows", status: "operational", detail: "Payment arrangement (durable timer to scheduled date) + UNKNOWN reconciliation with durable backoff; tested against Temporal's time-skipping env" },
   { component: "Web Chat Channel", status: "operational", detail: "FastAPI session + message API wired to the agent runtime; payment execution blocked on chat; /chat demo widget" },
   { component: "Output Filter", status: "operational", detail: "Word-boundary, case-preserving, streaming-safe (loan → contract)" },
   { component: "Mock FAC API", status: "running", detail: "3 fake accounts (Westpond, CPR tenants) with payment methods and negotiation rules" },
@@ -150,15 +151,15 @@ export const ROADMAP: MilestoneItem[] = [
     ],
   },
   {
-    name: "M2 — Compliance Engine + Temporal", status: "planned",
+    name: "M2 — Compliance Engine + Temporal", status: "done",
     desc: "Stateless compliance engine and durable orchestration for multi-day workflows.",
     items: [
       "Stateless compliance engine (strictest-wins, fail-closed)",
       "Rule registry: time windows, caps, DNC, opt-outs, state exclusions",
-      "Temporal workflow per account (durable timers, signals)",
-      "Cross-channel arbitration via journey version",
+      "Temporal workflow per account (durable timers)",
       "Reconciliation worker for UNKNOWN state",
-      "Replay tests on deploy",
+      "⬜ Cross-channel arbitration via journey version",
+      "⬜ Replay tests on deploy",
     ],
   },
   {
