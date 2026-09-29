@@ -13,7 +13,10 @@ import pytest
 os.environ.setdefault("FAC_API_BASE_URL", "http://localhost:9000")
 os.environ.setdefault("PAYMENT_PROVIDER_BASE_URL", "http://localhost:9001")
 os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://salient:salient@localhost:5432/salient")
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql+asyncpg://agentic_platform:agentic_platform@localhost:5432/agentic_platform",
+)
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 
 

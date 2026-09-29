@@ -1,1 +1,1 @@
-"""Marshall — the backend for the Salient Replica system."""
+"""Marshall — the backend for the Agentic Servicing Platform."""

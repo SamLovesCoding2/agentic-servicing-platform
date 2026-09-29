@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Interactive CLI for the Salient Replica.
+Interactive CLI for the Agentic Servicing Platform.
 
 Lets you have real conversations with the Taylor agent through the
 full safety system (router, tool registry, state machine, completion gate).
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Salient Replica interactive CLI")
+    parser = argparse.ArgumentParser(description="Agentic Servicing Platform interactive CLI")
     parser.add_argument("--auth", default="verified", choices=["anonymous", "verified", "step_up"],
                         help="Initial auth level")
     parser.add_argument("--channel", default="sms", choices=["sms", "chat", "voice"],
@@ -110,7 +110,7 @@ async def main():
     # Header
     mode = "LLM-powered" if runtime.has_llm else "deterministic"
     print("=" * 60)
-    print("  Salient Replica — Taylor Agent")
+    print("  Agentic Servicing Platform — Taylor Agent")
     print(f"  Mode: {mode}")
     print(f"  Channel: {channel.value} | Auth: {auth_level.value} | Account: {account_id}")
     print("=" * 60)

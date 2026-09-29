@@ -1,5 +1,5 @@
 [project]
-name = "salient-replica"
+name = "agentic-servicing-platform"
 version = "0.1.0"
 description = "Conversational AI system with deterministic safety boundaries around LLM reasoning"
 requires-python = ">=3.11"

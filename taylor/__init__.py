@@ -1,1 +1,1 @@
-"""Taylor — the agent core for the Salient Replica system."""
+"""Taylor — the agent core for the Agentic Servicing Platform."""

@@ -1,5 +1,5 @@
 """
-Database persistence for the Salient Replica.
+Database persistence for the Agentic Servicing Platform.
 
 Uses SQLAlchemy async with asyncpg to persist:
   - Tool actions (the execution evidence chain)
@@ -108,7 +108,7 @@ class Database:
     def __init__(self, database_url: str | None = None):
         self._url = database_url or os.environ.get(
             "DATABASE_URL",
-            "postgresql+asyncpg://salient:salient@localhost:5432/salient",
+            "postgresql+asyncpg://agentic_platform:agentic_platform@localhost:5432/agentic_platform",
         )
         self._engine = None
 

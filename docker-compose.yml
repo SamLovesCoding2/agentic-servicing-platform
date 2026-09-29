@@ -3,16 +3,16 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: salient
-      POSTGRES_PASSWORD: salient
-      POSTGRES_DB: salient
+      POSTGRES_USER: agentic_platform
+      POSTGRES_PASSWORD: agentic_platform
+      POSTGRES_DB: agentic_platform
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U salient"]
+      test: ["CMD-SHELL", "pg_isready -U agentic_platform"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -105,8 +105,8 @@ services:
       - "9002:9002"
       - "9003:9000"
     environment:
-      MINIO_ROOT_USER: salient
-      MINIO_ROOT_PASSWORD: salient123
+      MINIO_ROOT_USER: agentic_platform
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-local-dev-only-change-me}"
     volumes:
       - minio_data:/data
     profiles: ["m4"]

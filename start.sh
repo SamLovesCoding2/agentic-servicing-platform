@@ -1,5 +1,5 @@
 #!/bin/bash
-# Salient Replica — Local Startup Script
+# Agentic Servicing Platform — Local Startup Script
 # Starts all mock services and the interactive CLI.
 # Requires Docker. Does NOT require any paid external services.
 
@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 ROOT_DIR="$(pwd)"
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║  Salient Replica — Local Startup                         ║"
+echo "║  Agentic Servicing Platform — Local Startup              ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 

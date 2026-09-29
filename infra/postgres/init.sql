@@ -1,4 +1,4 @@
--- Salient Replica — Database initialization
+-- Agentic Servicing Platform — Database initialization
 -- Milestone 1: Core tables for agent state, tool actions, and authorization artifacts
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

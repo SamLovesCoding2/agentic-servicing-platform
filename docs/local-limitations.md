@@ -1,4 +1,4 @@
-# Salient Replica — Local Running Guide & Limitations
+# Agentic Servicing Platform — Local Running Guide & Limitations
 
 **Date:** September 2026  
 **Goal:** Run everything locally for free, without any paid external services.
@@ -8,7 +8,7 @@
 ## Quick Start
 
 ```bash
-cd /Users/ianlu/salient-replica
+cd /Users/ianlu/agentic-servicing-platform
 ./start.sh
 ```
 
@@ -16,7 +16,7 @@ This script:
 1. Creates a virtual environment (if needed)
 2. Installs dependencies (if needed)
 3. Starts Docker containers for mock services
-4. Runs the 131-test suite
+4. Runs the 222-test Taylor core suite
 5. Launches the interactive CLI
 
 **Prerequisites:** Docker Desktop (free). No paid accounts needed.
@@ -27,7 +27,7 @@ This script:
 
 | Capability | Status | How to Use |
 |---|---|---|
-| **131-test suite** | ✅ Fully working | `pytest taylor/tests/ -v` |
+| **Full test suite** | ✅ 230 passed, 5 skipped | `pytest -v` |
 | **Mock FAC API** | ✅ Running in Docker | `curl http://localhost:9000/accounts/ACC-001/overview` |
 | **Mock Payment Provider** | ✅ Running in Docker | `curl http://localhost:9001/health` |
 | **Agent routing** | ✅ Fully working | CLI or tests — router classifies intents correctly |
@@ -38,7 +38,7 @@ This script:
 | **Output filter (loan → contract)** | ✅ Fully working | Tests verify word-boundary, case-preserving |
 | **Interactive CLI (deterministic mode)** | ✅ Fully working | `python -m taylor.runtime.cli --no-llm` |
 | **Agent graph visualizer** | ✅ Fully working | Open `frontend/index.html` in any browser |
-| **PostgreSQL** | ✅ Running in Docker | `localhost:5432` (user: salient, db: salient) |
+| **PostgreSQL** | ✅ Running in Docker | `localhost:5432` (user: agentic_platform, db: agentic_platform) |
 | **Redis** | ✅ Running in Docker | `localhost:6379` |
 | **Jaeger (traces UI)** | ✅ Running in Docker | `http://localhost:16686` |
 
@@ -60,9 +60,9 @@ This script:
 
 | Milestone | What's Missing | Target |
 |---|---|---|
-| **M2: Compliance Engine + Temporal** | Stateless compliance engine, Temporal durable workflows, reconciliation worker, replay tests | Next |
+| **M2: Compliance Engine + Temporal** | Cross-channel arbitration and replay tests remain; core engine and workflows are implemented | In progress |
 | **M3: SMS Channel** | Twilio webhook handler, inbound coalescing, outbound pipeline, compliance keyword detection | Future |
-| **M4: Web Chat** | Browser widget, JWT auth, session isolation, post-call processing | Future |
+| **M4: Web Chat** | JWT auth, durable sessions, reconnect handling, post-call processing remain; local API/widget works | In progress |
 | **M5: Voice** | LiveKit, ASR/TTS, VAD, DTMF protected collection, interruption handling | Future |
 | **M6: Observability + Evals** | OpenTelemetry instrumentation, per-layer evaluation framework, evidence bundles | Future |
 
@@ -72,9 +72,9 @@ This script:
 
 ### Run Tests
 ```bash
-cd /Users/ianlu/salient-replica
+cd /Users/ianlu/agentic-servicing-platform
 source .venv/bin/activate
-pytest -v                          # all 131 tests
+pytest -v                          # 230 passed, 5 skipped
 pytest taylor/tests/test_router.py -v   # just router tests
 pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```
@@ -99,7 +99,7 @@ python -m taylor.runtime.cli --debug
 
 ### Agent Graph Visualizer
 ```bash
-open /Users/ianlu/salient-replica/frontend/index.html
+open /Users/ianlu/agentic-servicing-platform/frontend/index.html
 ```
 - Click any node to see its contract, tools, and description
 - Use the Route Simulator (top-left) to test how utterances route
@@ -159,7 +159,7 @@ Your Machine (Docker)
 Your Machine (Python)
 ├── Taylor Agent Core           ← LangGraph, tools, state machine
 ├── CLI                         ← Interactive conversation interface
-└── 131 tests                   ← Safety boundary verification
+└── 235 collected tests         ← 230 passed, 5 skipped
 
 Your Browser
 └── Agent Visualizer            ← Interactive graph view (frontend/index.html)

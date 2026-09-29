@@ -1,1 +1,1 @@
-"""Mock external services for the Salient Replica."""
+"""Mock external services for the Agentic Servicing Platform."""

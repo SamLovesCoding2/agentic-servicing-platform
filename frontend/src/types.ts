@@ -1,4 +1,4 @@
-// Shared types for the Salient Replica visualizer
+// Shared types for the Agentic Servicing Platform visualizer
 
 export type NodeType = "control" | "subgraph" | "gate";
 export type ToolClass = "read" | "proposal" | "execution";

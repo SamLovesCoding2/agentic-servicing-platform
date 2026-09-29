@@ -6,10 +6,10 @@ export function StatusPanel() {
   return (
     <div>
       <div className="card">
-        <div className="card-title">Current Implementation — Milestone 1</div>
+        <div className="card-title">Current Implementation — M1 + M2 core + M4 chat</div>
         <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 20 }}>
-          The core agent graph, tool architecture, and state management are complete and tested.
-          131 tests verify every safety boundary. Mock services are running. LLM integration is
+          The core graph, compliance engine, Temporal workflows, and web chat channel are implemented.
+          The full suite reports 230 passed and 5 skipped. Mock services are running. LLM integration is
           wired but needs OpenAI credits for live responses.
         </p>
 
@@ -33,7 +33,7 @@ export function StatusPanel() {
             borderRadius: 8, padding: 12, margin: "8px 0 16px",
             fontFamily: "'SF Mono', monospace", fontSize: 12, overflowX: "auto"
           }}>
-{`cd salient-replica
+{`cd agentic-servicing-platform
 ./start.sh`}
           </pre>
 
@@ -44,7 +44,7 @@ export function StatusPanel() {
             fontFamily: "'SF Mono', monospace", fontSize: 12, overflowX: "auto"
           }}>
 {`source .venv/bin/activate
-pytest -v    # 131 tests`}
+pytest -v    # 230 passed, 5 skipped`}
           </pre>
 
           <p><strong>3. Interactive CLI:</strong></p>

@@ -23,7 +23,7 @@ from taylor.orchestration.shared import (
     ReconcilePaymentInput,
 )
 
-_DEFAULT_TASK_QUEUE = "salient-taylor"
+_DEFAULT_TASK_QUEUE = "agentic-taylor"
 
 
 async def connect() -> tuple[Client, str]:

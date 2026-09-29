@@ -1,1 +1,1 @@
-"""Evaluation framework for the Salient Replica."""
+"""Evaluation framework for the Agentic Servicing Platform."""

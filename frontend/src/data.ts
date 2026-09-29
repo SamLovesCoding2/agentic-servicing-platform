@@ -130,7 +130,7 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "LLM Integration (OpenAI)", status: "wired", detail: "Reasoning engine, route-specific prompts, tool calling — needs API credits" },
   { component: "Database Persistence", status: "wired", detail: "SQLAlchemy async: tool_actions, authorization_artifacts, sessions, audit_events" },
   { component: "Interactive CLI", status: "operational", detail: "Real conversations through the safety system (deterministic + LLM modes)" },
-  { component: "Test Suite", status: "operational", detail: "131 tests covering every safety boundary and design principle" },
+  { component: "Test Suite", status: "operational", detail: "230 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
   { component: "Agent Graph Visualizer", status: "operational", detail: "This React/TypeScript UI you're looking at right now" },
 ];
 
@@ -147,7 +147,7 @@ export const ROADMAP: MilestoneItem[] = [
       "Intent router with channel + auth constraints",
       "Evidence completion gate",
       "Mock FAC API + mock payment provider",
-      "131 tests, all passing",
+      "230 passed, 5 skipped across the full suite",
     ],
   },
   {
@@ -174,15 +174,17 @@ export const ROADMAP: MilestoneItem[] = [
     ],
   },
   {
-    name: "M4 — Web Chat", status: "planned",
-    desc: "Browser widget with JWT auth, session isolation, and post-call processing.",
+    name: "M4 — Web Chat", status: "in-progress",
+    desc: "Core web chat is implemented; browser JWT auth, durable sessions, and post-call processing remain.",
     items: [
-      "Browser widget (React)",
-      "JWT auth flow",
-      "Session isolation (forked subprocess)",
-      "Narrow tool surface (no payment execution)",
-      "Post-call processing + analytics",
-      "$0.00 anti-pattern prevention",
+      "✅ Local /chat demo widget",
+      "✅ FastAPI session, message, and history API",
+      "✅ Bounded in-process session isolation",
+      "✅ Narrow tool surface (no payment execution)",
+      "✅ $0.00 anti-pattern prevention",
+      "⬜ Browser JWT auth",
+      "⬜ Durable session store and reconnect handling",
+      "⬜ Post-call processing + analytics",
     ],
   },
   {

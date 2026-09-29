@@ -1,9 +1,9 @@
-# Salient Replica
+# Agentic Servicing Platform
 
-A functional replica of a production conversational AI system for regulated customer interactions. Built with deterministic safety boundaries around nondeterministic LLM reasoning.
+A production-style conversational AI platform for regulated customer interactions. Built with deterministic safety boundaries around nondeterministic LLM reasoning.
 
-[![CI — Backend](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml/badge.svg?job=backend)](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml)
-[![CI — Frontend](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml/badge.svg?job=frontend)](https://github.com/SamLovesCoding2/salient-replica/actions/workflows/ci.yml)
+[![CI — Backend](https://github.com/SamLovesCoding2/agentic-servicing-platform/actions/workflows/ci.yml/badge.svg?job=backend)](https://github.com/SamLovesCoding2/agentic-servicing-platform/actions/workflows/ci.yml)
+[![CI — Frontend](https://github.com/SamLovesCoding2/agentic-servicing-platform/actions/workflows/ci.yml/badge.svg?job=frontend)](https://github.com/SamLovesCoding2/agentic-servicing-platform/actions/workflows/ci.yml)
 
 ## Documentation
 
@@ -83,8 +83,8 @@ Each subgraph has:
 
 ```bash
 # Clone the repo
-git clone <your-repo-url> salient-replica
-cd salient-replica
+git clone <your-repo-url> agentic-servicing-platform
+cd agentic-servicing-platform
 
 # Create virtual environment
 python3.11 -m venv .venv
@@ -186,7 +186,7 @@ TEMPORAL_INTEGRATION=1 pytest taylor/tests/test_orchestration.py -q
 ## Project Structure
 
 ```
-salient-replica/
+agentic-servicing-platform/
 ├── marshall/          # FastAPI backend
 ├── taylor/            # LangGraph agent core
 │   ├── graphs/        # Universal graph + subgraphs

@@ -1,5 +1,5 @@
 """
-Marshall — FastAPI backend for the Salient Replica.
+Marshall — FastAPI backend for the Agentic Servicing Platform.
 
 M4 core: the web chat channel. Exposes a session + message API wired to
 the Taylor agent runtime (deterministic mode by default; LLM automatically
@@ -28,7 +28,11 @@ from taylor.runtime.text_runtime import TextRuntime
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Marshall", version="0.2.0", description="Salient Replica backend")
+app = FastAPI(
+    title="Marshall",
+    version="0.2.0",
+    description="Agentic Servicing Platform backend",
+)
 
 
 def create_runtime() -> TextRuntime:
@@ -170,7 +174,7 @@ CHAT_WIDGET_HTML = """<!doctype html>
 </head>
 <body>
 <main>
-  <h1>Taylor — Salient Replica (web chat demo)</h1>
+  <h1>Taylor — Agentic Servicing Platform (web chat demo)</h1>
   <div id="log"></div>
   <form id="form">
     <input id="input" placeholder="Type a message…" autocomplete="off">

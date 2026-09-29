@@ -1,4 +1,4 @@
-# Salient Replica — Technical Architecture Document
+# Agentic Servicing Platform — Technical Architecture Document
 
 **Version:** 1.0  
 **Date:** September 2026  
@@ -35,7 +35,7 @@
 
 ## 1. Executive Summary
 
-Salient Replica is a functional replica of a production conversational AI system for regulated customer interactions. It demonstrates the architecture, programming logic, safety boundaries, and design patterns required to build an agent-native system where nondeterministic LLM reasoning operates inside deterministic code boundaries.
+Agentic Servicing Platform is a production-style conversational AI system for regulated customer interactions. It demonstrates the architecture, programming logic, safety boundaries, and design patterns required to build an agent-native system where nondeterministic LLM reasoning operates inside deterministic code boundaries.
 
 The system is built on a core principle: **the model interprets language and proposes actions; code decides whether actions are allowed, validates inputs, executes exactly once, records evidence, and decides what the customer may safely be told.**
 
@@ -56,12 +56,12 @@ The system is built on a core principle: **the model interprets language and pro
 | Mock payment provider with idempotency + timeout simulation | ✅ Running |
 | Deterministic output filter | ✅ Operational |
 | Interactive CLI | ✅ Operational |
-| Test suite (131 tests) | ✅ Passing |
+| Test suite (235 collected; 230 passed, 5 skipped) | ✅ Passing |
 | SMS channel (Twilio) | 📋 Milestone 3 |
-| Web Chat channel | 📋 Milestone 4 |
+| Web Chat channel | ✅ Core implemented (M4) |
 | Voice channel (LiveKit) | 📋 Milestone 5 |
-| Temporal durable orchestration | 📋 Milestone 2 |
-| Compliance engine (stateless, strictest-wins) | 📋 Milestone 2 |
+| Temporal durable orchestration | ✅ Core implemented (M2) |
+| Compliance engine (stateless, strictest-wins) | ✅ Core implemented (M2) |
 | Observability (OpenTelemetry + Jaeger) | 📋 Milestone 6 |
 
 ---
@@ -565,13 +565,13 @@ If the LLM call fails (network error, quota exhaustion, timeout), the reasoning 
 - Outbound pipeline: plan → approval → compliance gate → send
 - Event ID deduplication
 
-### Web Chat (Milestone 4 — Planned)
+### Web Chat (Milestone 4 — Core implemented)
 
-- Browser widget with JWT auth
-- Marshall validates JWT → fetches FAC account → flattens → Redis → prewarm
-- Session isolation (forked subprocess or async with strict per-session state)
+- Local demo widget with FastAPI session, message, and history endpoints
+- Server-derived identity and bounded in-process session state
 - Narrow tool surface (no payment execution — architectural)
-- `$0.00` anti-pattern prevention: production variable presence check before rendering
+- `$0.00` anti-pattern prevention
+- Remaining: browser JWT auth, durable session storage, reconnect handling, and post-call analytics
 
 ### Voice (Milestone 5 — Planned)
 
@@ -636,7 +636,7 @@ A prompt can ask the model not to say "loan," but it cannot guarantee it. The ou
 
 ## 16. Compliance Handling
 
-### Design (M1 Implementation)
+### Design (M1 Router Preemption)
 
 Compliance phrases are detected in the router, before the LLM sees the utterance:
 
@@ -650,7 +650,7 @@ COMPLIANCE_PHRASES = [
 
 When detected, the router preempts all other routing and sends the conversation to the compliance_handoff subgraph, which initiates a human transfer.
 
-### Design (M2 — Planned Full Compliance Engine)
+### Design (M2 — Implemented Compliance Engine)
 
 The full compliance engine will be:
 - **Stateless:** Pure function of (account state, proposed action, time, rules)
@@ -658,7 +658,7 @@ The full compliance engine will be:
 - **Fail-closed:** If the engine can't determine compliance, it denies
 - **Never initiates:** Compliance only blocks, never triggers
 
-Rules to implement:
+Implemented rules include:
 - Terminal account status (settled, cease-and-desist, bankruptcy, legal)
 - Channel opt-outs (SMS, voice, DNC)
 - Consent verification
@@ -699,16 +699,13 @@ All IDs are generated at trusted boundaries and propagated, never parsed from fr
 
 ### Test Categories
 
-| Category | File | Tests | What It Verifies |
+| Category | File | Coverage |
 |---|---|---|---|
-| State & Reducers | `test_state.py` | 22 | Merge, CAS, replace, state machine transitions, authorization invalidation |
-| Tool Envelope | `test_envelope.py` | 14 | Server-derived fields, model-supplied fields, idempotency, Decimal enforcement |
-| Tool Registry | `test_registry.py` | 14 | Capability-based exposure, channel overrides, authorization validation, precondition enforcement |
-| Intent Router | `test_router.py` | 18 | Classification, route validation, channel constraints, auth constraints, compliance preemption |
-| Output Filter | `test_output_filter.py` | 14 | Word boundary, case preservation, streaming safety, custom maps |
-| Subgraph Contracts | `test_subgraphs.py` | 21 | Contract definitions, exit validation, success language rules, completion gate |
-| End-to-End Graph | `test_graph.py` | 13 | Graph compilation, routing, preconditions, loop budgets, completion gate |
-| **Total** | | **131** | **All passing** |
+| Core state and graph boundaries | `test_state.py`, `test_graph.py`, `test_subgraphs.py` | Reducers, transitions, routing, contracts, completion gate |
+| Tool and policy boundaries | `test_envelope.py`, `test_registry.py`, `test_compliance.py` | Identity, idempotency, exposure, authorization, fail-closed compliance |
+| Channels and orchestration | `test_chat_channel.py`, `test_orchestration.py` | Session lifecycle, chat restrictions, durable timers, UNKNOWN reconciliation |
+| Routing, output, and evals | `test_router.py`, `test_output_filter.py`, `test_eval_suite.py` | Classification, filtering, regression cases |
+| **Full suite** | | **235 collected; 230 passed, 5 skipped** |
 
 ### Design Principle
 
@@ -747,10 +744,10 @@ Config is loaded from `taylor/graphs/universal/graph_configs/default_en.json`. C
 
 | Milestone | Scope | Key Deliverables |
 |---|---|---|
-| M1 ✅ | Core agent + tools + state | LangGraph, tool registry, state machine, mock services, 131 tests |
-| M2 | Compliance + Temporal | Stateless compliance engine, Temporal workflows, reconciliation worker, replay tests |
+| M1 ✅ | Core agent + tools + state | LangGraph, tool registry, state machine, mock services |
+| M2 🚧 | Compliance + Temporal | Compliance engine and durable workflows implemented; cross-channel arbitration and replay tests remain |
 | M3 | SMS channel | Twilio webhooks, coalescing, outbound pipeline, compliance keywords |
-| M4 | Web Chat | Browser widget, JWT auth, session isolation, post-call processing |
+| M4 🚧 | Web Chat | Local widget and API implemented; JWT auth, durable sessions, and post-call processing remain |
 | M5 | Voice | LiveKit, ASR/TTS, VAD, DTMF protected collection, interruption handling |
 | M6 | Observability + Evals | OpenTelemetry, Jaeger, per-layer evaluation framework, evidence bundles |
 
@@ -759,7 +756,7 @@ Config is loaded from `taylor/graphs/universal/graph_configs/default_en.json`. C
 ## 21. Appendix: File Inventory
 
 ```
-salient-replica/
+agentic-servicing-platform/
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -852,7 +849,7 @@ salient-replica/
     └── conversation_evals/
 ```
 
-**Total: 59 files, 6,639 lines of code, 131 tests passing.**
+**Current validation: 235 tests collected, 230 passed, 5 skipped.**
 
 ---
 

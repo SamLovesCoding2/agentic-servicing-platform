@@ -3,7 +3,7 @@
 Runs the durable orchestration worker against a Temporal server.
 
     python -m taylor.orchestration.worker                # localhost:7233
-    TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_TASK_QUEUE=salient-taylor \
+    TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_TASK_QUEUE=agentic-taylor \
         python -m taylor.orchestration.worker
 
 Start a server first with the m2 compose profile:
@@ -34,7 +34,7 @@ from taylor.orchestration.workflows import (
 async def main() -> None:
     address = os.environ.get("TEMPORAL_ADDRESS", "localhost:7233")
     namespace = os.environ.get("TEMPORAL_NAMESPACE", "default")
-    task_queue = os.environ.get("TEMPORAL_TASK_QUEUE", "salient-taylor")
+    task_queue = os.environ.get("TEMPORAL_TASK_QUEUE", "agentic-taylor")
 
     client = await Client.connect(address, namespace=namespace)
     worker = Worker(

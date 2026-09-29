@@ -26,7 +26,7 @@ export default function App() {
       <nav className="navbar">
         <div className="navbar-brand">
           <span className="dot" />
-          Salient Replica
+          Agentic Servicing Platform
         </div>
         <div className="navbar-tabs">
           <button
@@ -48,7 +48,7 @@ export default function App() {
             Roadmap
           </button>
         </div>
-        <span className="navbar-badge">131 tests passing</span>
+        <span className="navbar-badge">230 passed · 5 skipped</span>
       </nav>
 
       {/* Main Content */}
