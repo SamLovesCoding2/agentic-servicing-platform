@@ -38,3 +38,7 @@ htmlcov/
 
 # Logs
 *.log
+
+# Local evaluation reports and redacted trace output
+eval-report*.json
+var/

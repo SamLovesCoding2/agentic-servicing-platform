@@ -27,7 +27,7 @@ This script:
 
 | Capability | Status | How to Use |
 |---|---|---|
-| **Full test suite** | ✅ 230 passed, 5 skipped | `pytest -v` |
+| **Full test suite** | ✅ 236 passed, 5 skipped | `pytest -v` |
 | **Mock FAC API** | ✅ Running in Docker | `curl http://localhost:9000/accounts/ACC-001/overview` |
 | **Mock Payment Provider** | ✅ Running in Docker | `curl http://localhost:9001/health` |
 | **Agent routing** | ✅ Fully working | CLI or tests — router classifies intents correctly |
@@ -41,6 +41,8 @@ This script:
 | **PostgreSQL** | ✅ Running in Docker | `localhost:5432` (user: agentic_platform, db: agentic_platform) |
 | **Redis** | ✅ Running in Docker | `localhost:6379` |
 | **Jaeger (traces UI)** | ✅ Running in Docker | `http://localhost:16686` |
+| **Deterministic eval runner** | ✅ Fully working | `python -m evals.runner --cases evals/cases.json` |
+| **Privacy-aware turn traces** | ✅ Fully working | Set `TRACE_JSONL_PATH=./var/traces.jsonl` |
 
 ---
 
@@ -64,7 +66,7 @@ This script:
 | **M3: SMS Channel** | Twilio webhook handler, inbound coalescing, outbound pipeline, compliance keyword detection | Future |
 | **M4: Web Chat** | JWT auth, durable sessions, reconnect handling, post-call processing remain; local API/widget works | In progress |
 | **M5: Voice** | LiveKit, ASR/TTS, VAD, DTMF protected collection, interruption handling | Future |
-| **M6: Observability + Evals** | OpenTelemetry instrumentation, per-layer evaluation framework, evidence bundles | Future |
+| **M6: Observability + Evals** | Deterministic eval runner and privacy-aware traces are implemented; dashboards, OTLP export, and model-quality evals remain | In progress |
 
 ---
 
@@ -74,7 +76,7 @@ This script:
 ```bash
 cd /Users/ianlu/agentic-servicing-platform
 source .venv/bin/activate
-pytest -v                          # 230 passed, 5 skipped
+pytest -v                          # 236 passed, 5 skipped
 pytest taylor/tests/test_router.py -v   # just router tests
 pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```
@@ -83,6 +85,24 @@ pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```bash
 python -m taylor.runtime.cli --no-llm --debug
 ```
+
+### Evaluation runner
+```bash
+python -m evals.runner --cases evals/cases.json --fail-under 1.0
+```
+
+The runner is deterministic and free to execute. It reports pass rate by category
+and exits non-zero when the configured threshold is not met.
+
+### Local trace capture
+```bash
+TRACE_JSONL_PATH=./var/traces.jsonl \
+  MARSHALL_LLM_ENABLED=0 \
+  uvicorn marshall.app.main:app --port 8000
+```
+
+Trace records contain correlation IDs, routing, gate decisions, tool counts, usage
+metadata, and duration. Raw utterances and protected tokens are excluded.
 Commands within the CLI:
 - `/auth step_up` — upgrade to step-up auth (unlocks sensitive actions)
 - `/channel chat` — switch to chat channel (blocks payment execution)
@@ -159,7 +179,7 @@ Your Machine (Docker)
 Your Machine (Python)
 ├── Taylor Agent Core           ← LangGraph, tools, state machine
 ├── CLI                         ← Interactive conversation interface
-└── 235 collected tests         ← 230 passed, 5 skipped
+└── 241 collected tests         ← 236 passed, 5 skipped
 
 Your Browser
 └── Agent Visualizer            ← Interactive graph view (frontend/index.html)

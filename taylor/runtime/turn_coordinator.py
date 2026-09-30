@@ -36,6 +36,11 @@ from taylor.graphs.universal.state import (
 )
 from taylor.llm.client import LLMClient
 from taylor.llm.reasoning import ReasoningEngine
+from taylor.observability.tracing import (
+    TraceSink,
+    TurnTrace,
+    utterance_fingerprint,
+)
 from taylor.output.output_filter import filter_output
 from taylor.tools.envelope import ToolEnvelope, ToolResult
 from taylor.tools.registry import ToolRegistry
@@ -67,6 +72,7 @@ class TurnCoordinator:
         max_turn_seconds: float = 30.0,
         output_replacements: dict[str, str] | None = None,
         max_tool_attempts: int = 5,
+        trace_sink: TraceSink | None = None,
     ):
         self._registry = tool_registry
         self._llm = llm_client
@@ -74,6 +80,7 @@ class TurnCoordinator:
         self._max_turn_seconds = max_turn_seconds
         self._output_replacements = output_replacements
         self._max_tool_attempts = max_tool_attempts
+        self._trace_sink = trace_sink
 
         # Create reasoning engine if LLM is available
         self._reasoning: ReasoningEngine | None = None
@@ -167,6 +174,18 @@ class TurnCoordinator:
             business_state=business_state,
             protected_state=protected_state,
         )
+        trace = TurnTrace(
+            conversation_id=conversation_id,
+            turn_id=state["turn_id"],
+            sink=self._trace_sink,
+        )
+        trace.event(
+            "turn.started",
+            channel=state["channel"],
+            auth_level=state["auth_level"],
+            utterance_sha256=utterance_fingerprint(utterance),
+            llm_enabled=self.has_llm,
+        )
 
         logger.info(
             f"Turn started: conversation={conversation_id} "
@@ -178,28 +197,45 @@ class TurnCoordinator:
         route = route_result.get("route", Route.KNOWLEDGE)
         state["route"] = route
         state["detected_intent"] = route_result.get("detected_intent")
+        trace.event(
+            "turn.routed",
+            route=route,
+            detected_intent=state["detected_intent"],
+        )
 
         logger.info(f"Routed to: {route}")
 
         # Step 2: Reason (LLM-powered or deterministic)
-        if self._reasoning:
-            reasoning_result = await self._reasoning.reason(
-                utterance=utterance,
-                route=route,
-                state=state,
-                conversation_history=conversation_history,
-            )
-            reply_text = reasoning_result["reply"]
-            exit_state = reasoning_result["exit_state"]
-            action_status = reasoning_result.get("action_status")
-            action_result = reasoning_result.get("action_result")
-            tool_calls_made = reasoning_result.get("tool_calls_made", [])
-            usage = reasoning_result.get("usage")
-        else:
-            # Deterministic fallback (for testing without LLM)
-            exit_state, action_status, action_result, reply_text = self._deterministic_reply(route, state)
-            tool_calls_made = []
-            usage = None
+        try:
+            if self._reasoning:
+                reasoning_result = await self._reasoning.reason(
+                    utterance=utterance,
+                    route=route,
+                    state=state,
+                    conversation_history=conversation_history,
+                )
+                reply_text = reasoning_result["reply"]
+                exit_state = reasoning_result["exit_state"]
+                action_status = reasoning_result.get("action_status")
+                action_result = reasoning_result.get("action_result")
+                tool_calls_made = reasoning_result.get("tool_calls_made", [])
+                usage = reasoning_result.get("usage")
+            else:
+                # Deterministic fallback (for testing without LLM)
+                exit_state, action_status, action_result, reply_text = self._deterministic_reply(
+                    route, state
+                )
+                tool_calls_made = []
+                usage = None
+        except Exception as exc:
+            trace.fail(type(exc).__name__)
+            raise
+        trace.event(
+            "turn.reasoned",
+            route=route,
+            tool_call_count=len(tool_calls_made),
+            model_usage=usage,
+        )
 
         state["exit_state"] = exit_state
         if action_status:
@@ -213,6 +249,12 @@ class TurnCoordinator:
         gate_result = completion_gate(gate_input)
         state["gate_result"] = gate_result.get("gate_result")
         success_allowed = gate_result.get("gate_result", {}).get("success_language_allowed", False)
+        trace.event(
+            "turn.gate_checked",
+            gate_passed=gate_result.get("gate_result", {}).get("gate_passed", False),
+            success_language_allowed=success_allowed,
+            exit_state=exit_state,
+        )
 
         # If gate failed, override reply
         if not gate_result.get("gate_result", {}).get("gate_passed", False):
@@ -235,6 +277,14 @@ class TurnCoordinator:
                 usage=usage,
             )
 
+        trace.finish(
+            route=route,
+            exit_state=exit_state,
+            action_status=action_status,
+            gate_passed=bool(gate_result.get("gate_result", {}).get("gate_passed", False)),
+            success_language_allowed=success_allowed,
+            tool_call_count=len(tool_calls_made),
+        )
         logger.info(
             f"Turn completed: conversation={conversation_id} "
             f"route={route} exit={exit_state} "
@@ -315,7 +365,14 @@ class TurnCoordinator:
                     "exit_state": exit_state.value if isinstance(exit_state, SubgraphExit) else str(exit_state),
                     "action_status": action_status.value if action_status else None,
                     "reply": reply[:500],  # Truncate for storage
-                    "tool_calls": tool_calls_made,
+                    "tool_calls": [
+                        {
+                            "tool": tool_call.get("tool"),
+                            "status": tool_call.get("status"),
+                            "action_id": tool_call.get("action_id"),
+                        }
+                        for tool_call in tool_calls_made
+                    ],
                     "usage": usage,
                 },
                 model_version=usage and "gpt-4o",

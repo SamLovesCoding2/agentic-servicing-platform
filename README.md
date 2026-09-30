@@ -123,6 +123,28 @@ pytest taylor/tests/test_state.py -v
 pytest taylor/tests/test_registry.py -v
 ```
 
+### Running Evaluations
+
+The deterministic evaluation runner checks routing, channel safety, authorization,
+compliance preemption, completion gates, and output filtering. It emits a JSON report
+that can be used as a CI quality gate:
+
+```bash
+python -m evals.runner --cases evals/cases.json --fail-under 1.0
+python -m evals.runner --cases evals/cases.json --json-out eval-report.json
+```
+
+Evaluation traces can be written locally as privacy-filtered JSONL:
+
+```bash
+TRACE_JSONL_PATH=./var/traces.jsonl \
+  MARSHALL_LLM_ENABLED=0 \
+  uvicorn marshall.app.main:app --port 8000
+```
+
+Traces contain correlation IDs, route, gate, tool-count, timing, and model-usage
+metadata. Raw utterances and protected tokens are not written to the trace sink.
+
 ### Running the Mock Services Standalone
 
 ```bash
@@ -196,7 +218,7 @@ agentic-servicing-platform/
 ├── mocks/             # Mock external services (FAC API, payment provider)
 ├── infra/             # Infrastructure configs (postgres, temporal, jaeger)
 ├── docs/              # Architecture docs + local running guide
-├── evals/             # Evaluation framework (M6+)
+├── evals/             # Deterministic evaluation cases and runner
 ├── frontend/          # React/TypeScript agent graph visualizer
 ├── .github/           # CI (pytest, ruff, frontend build)
 └── docker-compose.yml
@@ -211,7 +233,7 @@ agentic-servicing-platform/
 | M3 | Planned | SMS channel (Twilio/webhook) |
 | M4 | 🚧 In progress | **Web chat channel done** (session + message API, `/chat` demo widget, payments blocked on chat); JWT auth pending |
 | M5 | Planned | Voice channel (LiveKit + ASR/TTS) |
-| M6 | Planned | Observability + evaluation framework |
+| M6 | 🚧 In progress | **Deterministic eval runner + privacy-aware turn traces done**; OpenTelemetry exporter configuration, dashboards, and broader model-quality evals remain |
 
 ## Parody Naming
 

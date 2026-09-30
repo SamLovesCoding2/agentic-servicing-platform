@@ -22,6 +22,7 @@ from typing import Any
 
 from taylor.graphs.universal.state import AuthLevel, Channel
 from taylor.llm.client import LLMClient
+from taylor.observability.tracing import TraceSink, build_trace_sink
 from taylor.runtime.turn_coordinator import TurnCoordinator
 from taylor.tools.execution_tools import (
     SchedulePaymentTool,
@@ -102,6 +103,7 @@ class TextRuntime:
         database=None,
         max_tool_attempts: int = 5,
         force_deterministic: bool = False,
+        trace_sink: TraceSink | None = None,
     ):
         self._config = load_graph_config(config_name)
         self._registry = build_tool_registry(self._config)
@@ -129,6 +131,7 @@ class TextRuntime:
             max_turn_seconds=max_turn_seconds,
             output_replacements=replacements,
             max_tool_attempts=max_tool_attempts,
+            trace_sink=trace_sink or build_trace_sink(),
         )
 
         # Conversation history per conversation_id

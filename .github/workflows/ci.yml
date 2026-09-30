@@ -32,6 +32,9 @@ jobs:
       - name: Test (pytest)
         run: pytest -q
 
+      - name: Deterministic evaluation gate
+        run: python -m evals.runner --cases evals/cases.json --fail-under 1.0
+
   frontend:
     name: Frontend (build + lint)
     runs-on: ubuntu-latest

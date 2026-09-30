@@ -130,7 +130,7 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "LLM Integration (OpenAI)", status: "wired", detail: "Reasoning engine, route-specific prompts, tool calling — needs API credits" },
   { component: "Database Persistence", status: "wired", detail: "SQLAlchemy async: tool_actions, authorization_artifacts, sessions, audit_events" },
   { component: "Interactive CLI", status: "operational", detail: "Real conversations through the safety system (deterministic + LLM modes)" },
-  { component: "Test Suite", status: "operational", detail: "230 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
+  { component: "Test Suite", status: "operational", detail: "236 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
   { component: "Agent Graph Visualizer", status: "operational", detail: "This React/TypeScript UI you're looking at right now" },
 ];
 
@@ -147,7 +147,7 @@ export const ROADMAP: MilestoneItem[] = [
       "Intent router with channel + auth constraints",
       "Evidence completion gate",
       "Mock FAC API + mock payment provider",
-      "230 passed, 5 skipped across the full suite",
+      "236 passed, 5 skipped across the full suite",
     ],
   },
   {
@@ -200,14 +200,16 @@ export const ROADMAP: MilestoneItem[] = [
     ],
   },
   {
-    name: "M6 — Observability + Evals", status: "planned",
-    desc: "Full OpenTelemetry instrumentation and per-layer evaluation framework.",
+    name: "M6 — Observability + Evals", status: "in-progress",
+    desc: "Deterministic evaluation runner and privacy-aware turn traces are implemented; production dashboards and broader model-quality evals remain.",
     items: [
-      "OpenTelemetry traces → Jaeger",
-      "Correlation ID propagation (journey → conversation → turn → action)",
-      "Per-layer evaluation (router, tool, policy, conversation, safety)",
-      "Regression suite (50+ cases)",
-      "Evidence bundles on deploy",
+      "✅ Deterministic JSON evaluation runner",
+      "✅ Routing, channel, auth, compliance, gate, and output cases",
+      "✅ Privacy-aware turn trace lifecycle",
+      "✅ Optional JSONL trace sink and OpenTelemetry span API",
+      "⬜ OTLP exporter configuration and dashboards",
+      "⬜ Broader model-quality and groundedness evals",
+      "⬜ Evidence bundles on deploy",
     ],
   },
 ];

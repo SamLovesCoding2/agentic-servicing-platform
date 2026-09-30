@@ -1,0 +1,102 @@
+[
+  {
+    "id": "route-knowledge-anonymous",
+    "category": "routing",
+    "utterance": "What happens if I miss a payment?",
+    "channel": "chat",
+    "auth_level": "anonymous",
+    "expected": {
+      "route": "knowledge",
+      "exit_state": "cited_answer",
+      "gate_passed": true,
+      "success_language_allowed": true
+    }
+  },
+  {
+    "id": "route-account-verified",
+    "category": "routing",
+    "utterance": "What is my balance?",
+    "channel": "sms",
+    "auth_level": "verified",
+    "expected": {
+      "route": "account_servicing",
+      "exit_state": "fresh_result",
+      "gate_passed": true
+    }
+  },
+  {
+    "id": "route-arrangement",
+    "category": "routing",
+    "utterance": "Can I set up a payment plan?",
+    "channel": "chat",
+    "auth_level": "verified",
+    "expected": {
+      "route": "arrangement",
+      "exit_state": "validated_proposal",
+      "gate_passed": true
+    }
+  },
+  {
+    "id": "chat-blocks-payment",
+    "category": "channel_safety",
+    "utterance": "I want to pay $300",
+    "channel": "chat",
+    "auth_level": "step_up",
+    "expected": {
+      "route": "knowledge",
+      "gate_passed": true,
+      "success_language_allowed": true
+    }
+  },
+  {
+    "id": "sms-payment-needs-step-up",
+    "category": "authorization",
+    "utterance": "I want to pay $300",
+    "channel": "sms",
+    "auth_level": "verified",
+    "expected": {
+      "route": "knowledge",
+      "gate_passed": true,
+      "success_language_allowed": true
+    }
+  },
+  {
+    "id": "sms-payment-step-up",
+    "category": "authorization",
+    "utterance": "I want to pay $300",
+    "channel": "sms",
+    "auth_level": "step_up",
+    "expected": {
+      "route": "sensitive_action",
+      "exit_state": "confirmed",
+      "gate_passed": true,
+      "success_language_allowed": true,
+      "reply_contains": ["scheduled"]
+    }
+  },
+  {
+    "id": "compliance-preempts-payment",
+    "category": "compliance",
+    "utterance": "I dispute this debt and want to pay today",
+    "channel": "voice",
+    "auth_level": "step_up",
+    "expected": {
+      "route": "compliance_handoff",
+      "exit_state": "transfer_accepted",
+      "gate_passed": true,
+      "success_language_allowed": true
+    }
+  },
+  {
+    "id": "output-filter-customer-language",
+    "category": "output_safety",
+    "utterance": "How much do I owe?",
+    "channel": "chat",
+    "auth_level": "verified",
+    "expected": {
+      "route": "account_servicing",
+      "gate_passed": true,
+      "reply_not_contains": ["loan"]
+    }
+  }
+]

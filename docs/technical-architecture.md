@@ -56,13 +56,13 @@ The system is built on a core principle: **the model interprets language and pro
 | Mock payment provider with idempotency + timeout simulation | ✅ Running |
 | Deterministic output filter | ✅ Operational |
 | Interactive CLI | ✅ Operational |
-| Test suite (235 collected; 230 passed, 5 skipped) | ✅ Passing |
+| Test suite (241 collected; 236 passed, 5 skipped) | ✅ Passing |
 | SMS channel (Twilio) | 📋 Milestone 3 |
 | Web Chat channel | ✅ Core implemented (M4) |
 | Voice channel (LiveKit) | 📋 Milestone 5 |
 | Temporal durable orchestration | ✅ Core implemented (M2) |
 | Compliance engine (stateless, strictest-wins) | ✅ Core implemented (M2) |
-| Observability (OpenTelemetry + Jaeger) | 📋 Milestone 6 |
+| Observability (privacy-aware turn traces + OpenTelemetry API) | 🚧 Core implemented (M6) |
 
 ---
 
@@ -671,7 +671,7 @@ Implemented rules include:
 
 ## 17. Observability
 
-### Planned (Milestone 6)
+### M6 core implementation
 
 | Signal | Tool | Purpose |
 |---|---|---|
@@ -679,6 +679,14 @@ Implemented rules include:
 | Metrics | Prometheus | How often and how long |
 | Audit | PostgreSQL audit_events | Who authorized what under which policy |
 | Logs | Structured (structlog) | What happened at one component |
+
+The runtime now emits a privacy-aware lifecycle trace for each turn:
+`turn.started → turn.routed → turn.reasoned → turn.gate_checked → turn.finished`.
+The trace carries conversation and turn correlation IDs, route, gate outcome,
+tool-call count, usage metadata, and duration. It records an utterance fingerprint
+instead of raw text and redacts protected-looking fields. A local JSONL sink is
+available for development; the OpenTelemetry API remains vendor-neutral and can
+be connected to an OTLP exporter or Jaeger collector.
 
 ### Correlation Model
 
@@ -705,7 +713,7 @@ All IDs are generated at trusted boundaries and propagated, never parsed from fr
 | Tool and policy boundaries | `test_envelope.py`, `test_registry.py`, `test_compliance.py` | Identity, idempotency, exposure, authorization, fail-closed compliance |
 | Channels and orchestration | `test_chat_channel.py`, `test_orchestration.py` | Session lifecycle, chat restrictions, durable timers, UNKNOWN reconciliation |
 | Routing, output, and evals | `test_router.py`, `test_output_filter.py`, `test_eval_suite.py` | Classification, filtering, regression cases |
-| **Full suite** | | **235 collected; 230 passed, 5 skipped** |
+| **Full suite** | | **241 collected; 236 passed, 5 skipped** |
 
 ### Design Principle
 
@@ -749,7 +757,7 @@ Config is loaded from `taylor/graphs/universal/graph_configs/default_en.json`. C
 | M3 | SMS channel | Twilio webhooks, coalescing, outbound pipeline, compliance keywords |
 | M4 🚧 | Web Chat | Local widget and API implemented; JWT auth, durable sessions, and post-call processing remain |
 | M5 | Voice | LiveKit, ASR/TTS, VAD, DTMF protected collection, interruption handling |
-| M6 | Observability + Evals | OpenTelemetry, Jaeger, per-layer evaluation framework, evidence bundles |
+| M6 🚧 | Observability + Evals | Deterministic eval runner and privacy-aware turn traces implemented; dashboards, OTLP export, model-quality evals, and evidence bundles remain |
 
 ---
 
@@ -849,7 +857,7 @@ agentic-servicing-platform/
     └── conversation_evals/
 ```
 
-**Current validation: 235 tests collected, 230 passed, 5 skipped.**
+**Current validation: 241 tests collected, 236 passed, 5 skipped.**
 
 ---
 
