@@ -261,7 +261,7 @@ agentic-servicing-platform/
 | M1 | ✅ | Core agent graph + tool architecture + state management |
 | M2 | 🚧 In progress | **Compliance engine done** (stateless, strictest-wins, fail-closed); **Temporal durable workflows done** (payment arrangement + UNKNOWN reconciliation) |
 | M3 | Planned | SMS channel (Twilio/webhook) |
-| M4 | 🚧 In progress | **Web chat channel done** (session + message API, `/chat` demo widget, payments blocked on chat); JWT auth pending |
+| M4 | 🚧 In progress | **Web chat core + JWT identity + optional Redis sessions done**; reconnect handling and post-call analytics remain |
 | M5 | 🚧 In progress | **ElevenLabs STT/TTS adapter + voice-session API done**; LiveKit/WebRTC streaming, VAD, interruption handling, and DTMF collection remain |
 | M6 | 🚧 In progress | **Deterministic eval runner + privacy-aware turn traces done**; OpenTelemetry exporter configuration, dashboards, and broader model-quality evals remain |
 

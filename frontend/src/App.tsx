@@ -48,7 +48,7 @@ export default function App() {
             Roadmap
           </button>
         </div>
-        <span className="navbar-badge">241 passed · 5 skipped</span>
+        <span className="navbar-badge">247 passed · 5 skipped</span>
       </nav>
 
       {/* Main Content */}

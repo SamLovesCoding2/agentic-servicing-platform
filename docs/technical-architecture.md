@@ -56,7 +56,7 @@ The system is built on a core principle: **the model interprets language and pro
 | Mock payment provider with idempotency + timeout simulation | ✅ Running |
 | Deterministic output filter | ✅ Operational |
 | Interactive CLI | ✅ Operational |
-| Test suite (246 collected; 241 passed, 5 skipped) | ✅ Passing |
+| Test suite (252 collected; 247 passed, 5 skipped) | ✅ Passing |
 | SMS channel (Twilio) | 📋 Milestone 3 |
 | Web Chat channel | ✅ Core implemented (M4) |
 | Voice channel (ElevenLabs adapter + session API) | 🚧 Core implemented (M5) |
@@ -571,7 +571,8 @@ If the LLM call fails (network error, quota exhaustion, timeout), the reasoning 
 - Server-derived identity and bounded in-process session state
 - Narrow tool surface (no payment execution — architectural)
 - `$0.00` anti-pattern prevention
-- Remaining: browser JWT auth, durable session storage, reconnect handling, and post-call analytics
+- JWT identity boundary and optional Redis-backed session storage
+- Remaining: reconnect handling and post-call analytics
 
 ### Voice (Milestone 5 — Core adapter implemented)
 
@@ -716,7 +717,7 @@ All IDs are generated at trusted boundaries and propagated, never parsed from fr
 | Tool and policy boundaries | `test_envelope.py`, `test_registry.py`, `test_compliance.py` | Identity, idempotency, exposure, authorization, fail-closed compliance |
 | Channels and orchestration | `test_chat_channel.py`, `test_orchestration.py` | Session lifecycle, chat restrictions, durable timers, UNKNOWN reconciliation |
 | Routing, output, and evals | `test_router.py`, `test_output_filter.py`, `test_eval_suite.py` | Classification, filtering, regression cases |
-| **Full suite** | | **246 collected; 241 passed, 5 skipped** |
+| **Full suite** | | **252 collected; 247 passed, 5 skipped** |
 
 ### Design Principle
 
@@ -758,7 +759,7 @@ Config is loaded from `taylor/graphs/universal/graph_configs/default_en.json`. C
 | M1 ✅ | Core agent + tools + state | LangGraph, tool registry, state machine, mock services |
 | M2 🚧 | Compliance + Temporal | Compliance engine and durable workflows implemented; cross-channel arbitration and replay tests remain |
 | M3 | SMS channel | Twilio webhooks, coalescing, outbound pipeline, compliance keywords |
-| M4 🚧 | Web Chat | Local widget and API implemented; JWT auth, durable sessions, and post-call processing remain |
+| M4 🚧 | Web Chat | Local widget/API, JWT identity, and optional Redis sessions implemented; reconnect handling and post-call processing remain |
 | M5 🚧 | Voice | ElevenLabs STT/TTS adapter and turn API implemented; LiveKit, VAD, DTMF protected collection, and interruption handling remain |
 | M6 🚧 | Observability + Evals | Deterministic eval runner and privacy-aware turn traces implemented; dashboards, OTLP export, model-quality evals, and evidence bundles remain |
 
@@ -860,7 +861,7 @@ agentic-servicing-platform/
     └── conversation_evals/
 ```
 
-**Current validation: 246 tests collected, 241 passed, 5 skipped.**
+**Current validation: 252 tests collected, 247 passed, 5 skipped.**
 
 ---
 

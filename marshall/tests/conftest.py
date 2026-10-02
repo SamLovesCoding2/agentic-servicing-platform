@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 os.environ["MARSHALL_LLM_ENABLED"] = "0"  # must be set before importing app
+os.environ["SESSION_STORE"] = "memory"
 
 import pytest
 from fastapi.testclient import TestClient

@@ -19,10 +19,15 @@ import logging
 import os
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
+from marshall.app.auth import (
+    enforce_session_access,
+    issue_token,
+    resolve_identity,
+)
 from marshall.app.sessions import chat_sessions
 from marshall.app.voice_provider import (
     ElevenLabsVoiceProvider,
@@ -87,6 +92,13 @@ class CreateSessionRequest(BaseModel):
         default="verified",
         description="Server-assigned auth level (anonymous | verified). Chat cannot do step_up.",
     )
+    tenant_id: str = Field(default="demo", min_length=1, max_length=100)
+
+
+class DemoTokenRequest(BaseModel):
+    customer_id: str = Field(default="cust_demo_001", min_length=1, max_length=255)
+    tenant_id: str = Field(default="demo", min_length=1, max_length=100)
+    auth_level: str = Field(default="verified")
 
 
 class MessageRequest(BaseModel):
@@ -106,8 +118,9 @@ class CreateVoiceSessionRequest(BaseModel):
     customer_id: str = Field(default="cust_demo_001", description="Demo customer tag.")
     auth_level: str = Field(
         default="verified",
-        description="Server-assigned auth level (anonymous | verified).",
+        description="Server-assigned auth level (anonymous | verified | step_up).",
     )
+    tenant_id: str = Field(default="demo", min_length=1, max_length=100)
 
 
 class VoiceTurnRequest(BaseModel):
@@ -141,15 +154,44 @@ async def ready() -> dict[str, str]:
     return {"status": "ready", "service": "marshall"}
 
 
+@app.post("/api/auth/demo-token")
+async def create_demo_token(body: DemoTokenRequest) -> dict[str, Any]:
+    """Mint a local-only token for testing the JWT boundary."""
+    if os.environ.get("AUTH_MODE", "demo").lower() != "demo":
+        raise HTTPException(status_code=404, detail="demo token endpoint disabled")
+    try:
+        token = issue_token(
+            customer_id=body.customer_id,
+            tenant_id=body.tenant_id,
+            auth_level=body.auth_level,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=500, detail="JWT demo configuration invalid") from exc
+    return {"access_token": token, "token_type": "bearer"}
+
+
 # ── Chat channel ──────────────────────────────────────────────────────────────
 
 @app.post("/api/chat/sessions")
-async def create_chat_session(body: CreateSessionRequest) -> dict[str, Any]:
+async def create_chat_session(
+    body: CreateSessionRequest,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a chat session. The server derives identity; the client gets an
     opaque session_id it must present on every message."""
-    if body.auth_level not in ("anonymous", "verified"):
-        raise HTTPException(status_code=400, detail="auth_level must be anonymous or verified")
-    session = chat_sessions.create(customer_id=body.customer_id, auth_level=body.auth_level)
+    identity = resolve_identity(
+        authorization,
+        fallback_customer_id=body.customer_id,
+        fallback_auth_level=body.auth_level,
+        fallback_tenant_id=body.tenant_id,
+    )
+    if identity.auth_level not in ("anonymous", "verified"):
+        raise HTTPException(status_code=400, detail="chat requires anonymous or verified auth")
+    session = await chat_sessions.create(
+        customer_id=identity.customer_id,
+        auth_level=identity.auth_level,
+        tenant_id=identity.tenant_id,
+    )
     logger.info(
         "Chat session created: %s customer=%s auth=%s",
         session.session_id, session.customer_id, session.auth_level.value,
@@ -158,16 +200,23 @@ async def create_chat_session(body: CreateSessionRequest) -> dict[str, Any]:
         "session_id": session.session_id,
         "conversation_id": session.conversation_id,
         "customer_id": session.customer_id,
+        "tenant_id": session.tenant_id,
         "auth_level": session.auth_level.value,
     }
 
 
 @app.post("/api/chat/sessions/{session_id}/messages")
-async def send_chat_message(session_id: str, body: MessageRequest) -> MessageResponse:
+async def send_chat_message(
+    session_id: str,
+    body: MessageRequest,
+    authorization: str | None = Header(default=None),
+) -> MessageResponse:
     """Run one turn for an existing chat session."""
-    session = chat_sessions.get(session_id)
+    identity = resolve_identity(authorization)
+    session = await chat_sessions.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
+    enforce_session_access(identity, session, authorization)
 
     result = await runtime().run_turn(
         utterance=body.message,
@@ -177,8 +226,8 @@ async def send_chat_message(session_id: str, body: MessageRequest) -> MessageRes
         channel=Channel.CHAT,
     )
 
-    chat_sessions.append_message(session_id, "user", body.message)
-    chat_sessions.append_message(session_id, "assistant", result["reply"])
+    await chat_sessions.append_message(session_id, "user", body.message)
+    await chat_sessions.append_message(session_id, "assistant", result["reply"])
 
     gate = result.get("gate_result") or {}
     return MessageResponse(
@@ -192,33 +241,44 @@ async def send_chat_message(session_id: str, body: MessageRequest) -> MessageRes
 
 
 @app.get("/api/chat/sessions/{session_id}/messages")
-async def get_chat_history(session_id: str) -> dict[str, Any]:
+async def get_chat_history(
+    session_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Return the bounded transcript for a session."""
-    session = chat_sessions.get(session_id)
+    identity = resolve_identity(authorization)
+    session = await chat_sessions.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
+    enforce_session_access(identity, session, authorization)
     return {"session_id": session_id, "messages": session.messages}
 
 
 # ── Voice channel ────────────────────────────────────────────────────────────
 
 @app.post("/api/voice/sessions")
-async def create_voice_session(body: CreateVoiceSessionRequest) -> dict[str, Any]:
+async def create_voice_session(
+    body: CreateVoiceSessionRequest,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a voice session with server-owned identity."""
-    if body.auth_level not in ("anonymous", "verified"):
-        raise HTTPException(
-            status_code=400,
-            detail="auth_level must be anonymous or verified",
-        )
-    session = voice_sessions.create(
-        customer_id=body.customer_id,
-        auth_level=body.auth_level,
+    identity = resolve_identity(
+        authorization,
+        fallback_customer_id=body.customer_id,
+        fallback_auth_level=body.auth_level,
+        fallback_tenant_id=body.tenant_id,
+    )
+    session = await voice_sessions.create(
+        customer_id=identity.customer_id,
+        auth_level=identity.auth_level,
+        tenant_id=identity.tenant_id,
     )
     provider = voice_provider()
     return {
         "session_id": session.session_id,
         "conversation_id": session.conversation_id,
         "customer_id": session.customer_id,
+        "tenant_id": session.tenant_id,
         "auth_level": session.auth_level.value,
         "provider": "elevenlabs" if provider.available else "unconfigured",
     }
@@ -228,15 +288,18 @@ async def create_voice_session(body: CreateVoiceSessionRequest) -> dict[str, Any
 async def send_voice_turn(
     session_id: str,
     body: VoiceTurnRequest,
+    authorization: str | None = Header(default=None),
 ) -> VoiceTurnResponse:
     """Transcribe optional audio, run Taylor, and optionally synthesize a reply.
 
     Transcript input makes the endpoint usable without paid services. Audio
     input requires a configured ElevenLabs provider.
     """
-    session = voice_sessions.get(session_id)
+    identity = resolve_identity(authorization)
+    session = await voice_sessions.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="voice session not found")
+    enforce_session_access(identity, session, authorization)
     if body.transcript is None and body.audio_base64 is None:
         raise HTTPException(
             status_code=422,
@@ -274,7 +337,7 @@ async def send_voice_turn(
         auth_level=session.auth_level,
         channel=Channel.VOICE,
     )
-    session.append_turn(transcript, result["reply"])
+    await voice_sessions.append_turn(session_id, transcript, result["reply"])
 
     audio_base64 = None
     audio_status = "not_requested"
@@ -305,10 +368,15 @@ async def send_voice_turn(
 
 
 @app.get("/api/voice/sessions/{session_id}/turns")
-async def get_voice_history(session_id: str) -> dict[str, Any]:
-    session = voice_sessions.get(session_id)
+async def get_voice_history(
+    session_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    identity = resolve_identity(authorization)
+    session = await voice_sessions.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="voice session not found")
+    enforce_session_access(identity, session, authorization)
     return {"session_id": session_id, "turns": session.turns}
 
 

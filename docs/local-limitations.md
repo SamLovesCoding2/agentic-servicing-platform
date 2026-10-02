@@ -27,7 +27,7 @@ This script:
 
 | Capability | Status | How to Use |
 |---|---|---|
-| **Full test suite** | ✅ 241 passed, 5 skipped | `pytest -v` |
+| **Full test suite** | ✅ 247 passed, 5 skipped | `pytest -v` |
 | **Mock FAC API** | ✅ Running in Docker | `curl http://localhost:9000/accounts/ACC-001/overview` |
 | **Mock Payment Provider** | ✅ Running in Docker | `curl http://localhost:9001/health` |
 | **Agent routing** | ✅ Fully working | CLI or tests — router classifies intents correctly |
@@ -45,6 +45,8 @@ This script:
 | **Privacy-aware turn traces** | ✅ Fully working | Set `TRACE_JSONL_PATH=./var/traces.jsonl` |
 | **Voice transcript turns** | ✅ Fully working | `POST /api/voice/sessions/{id}/turns` with `transcript` |
 | **ElevenLabs STT/TTS adapter** | ✅ Tested without network | Configure `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` |
+| **JWT identity boundary** | ✅ Fully working | Set `AUTH_MODE=jwt`; use `Authorization: Bearer <token>` |
+| **Redis session backend** | ✅ Implemented | Set `SESSION_STORE=redis` and start Redis |
 
 ---
 
@@ -67,7 +69,7 @@ This script:
 |---|---|---|
 | **M2: Compliance Engine + Temporal** | Cross-channel arbitration and replay tests remain; core engine and workflows are implemented | In progress |
 | **M3: SMS Channel** | Twilio webhook handler, inbound coalescing, outbound pipeline, compliance keyword detection | Future |
-| **M4: Web Chat** | JWT auth, durable sessions, reconnect handling, post-call processing remain; local API/widget works | In progress |
+| **M4: Web Chat** | Reconnect handling and post-call processing remain; JWT identity and Redis sessions are implemented | In progress |
 | **M5: Voice** | ElevenLabs adapter and turn API are implemented; LiveKit/WebRTC, VAD, DTMF protected collection, and interruption handling remain | In progress |
 | **M6: Observability + Evals** | Deterministic eval runner and privacy-aware traces are implemented; dashboards, OTLP export, and model-quality evals remain | In progress |
 
@@ -79,7 +81,7 @@ This script:
 ```bash
 cd /Users/ianlu/agentic-servicing-platform
 source .venv/bin/activate
-pytest -v                          # 241 passed, 5 skipped
+pytest -v                          # 247 passed, 5 skipped
 pytest taylor/tests/test_router.py -v   # just router tests
 pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```
@@ -88,6 +90,21 @@ pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```bash
 python -m taylor.runtime.cli --no-llm --debug
 ```
+
+### JWT and Redis mode
+```bash
+AUTH_MODE=jwt SESSION_STORE=redis uvicorn marshall.app.main:app --port 8000
+```
+
+The local-only demo endpoint can mint a token while `AUTH_MODE=demo`:
+```bash
+curl -X POST http://localhost:8000/api/auth/demo-token \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id":"cust_demo_001","tenant_id":"demo"}'
+```
+The demo token endpoint is disabled when `AUTH_MODE=jwt`. In JWT mode, session
+creation and all session reads/writes require a bearer token, and customer plus
+tenant mismatches return `404` to avoid leaking session existence.
 
 ### Evaluation runner
 ```bash
@@ -197,7 +214,7 @@ Your Machine (Docker)
 Your Machine (Python)
 ├── Taylor Agent Core           ← LangGraph, tools, state machine
 ├── CLI                         ← Interactive conversation interface
-└── 246 collected tests         ← 241 passed, 5 skipped
+└── 252 collected tests         ← 247 passed, 5 skipped
 
 Your Browser
 └── Agent Visualizer            ← Interactive graph view (frontend/index.html)

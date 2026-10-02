@@ -9,7 +9,7 @@ export function StatusPanel() {
         <div className="card-title">Current Implementation — M1 + M2 core + M4 chat</div>
         <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 20 }}>
           The core graph, compliance engine, Temporal workflows, and web chat channel are implemented.
-          The full suite reports 241 passed and 5 skipped. Mock services are running. LLM integration is
+          The full suite reports 247 passed and 5 skipped. Mock services are running. LLM integration is
           wired but needs OpenAI credits for live responses.
         </p>
 
@@ -44,7 +44,7 @@ export function StatusPanel() {
             fontFamily: "'SF Mono', monospace", fontSize: 12, overflowX: "auto"
           }}>
 {`source .venv/bin/activate
-pytest -v    # 241 passed, 5 skipped`}
+pytest -v    # 247 passed, 5 skipped`}
           </pre>
 
           <p><strong>3. Interactive CLI:</strong></p>

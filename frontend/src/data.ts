@@ -130,7 +130,7 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "LLM Integration (OpenAI)", status: "wired", detail: "Reasoning engine, route-specific prompts, tool calling — needs API credits" },
   { component: "Database Persistence", status: "wired", detail: "SQLAlchemy async: tool_actions, authorization_artifacts, sessions, audit_events" },
   { component: "Interactive CLI", status: "operational", detail: "Real conversations through the safety system (deterministic + LLM modes)" },
-  { component: "Test Suite", status: "operational", detail: "241 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
+  { component: "Test Suite", status: "operational", detail: "247 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
   { component: "Agent Graph Visualizer", status: "operational", detail: "This React/TypeScript UI you're looking at right now" },
 ];
 
@@ -147,7 +147,7 @@ export const ROADMAP: MilestoneItem[] = [
       "Intent router with channel + auth constraints",
       "Evidence completion gate",
       "Mock FAC API + mock payment provider",
-      "241 passed, 5 skipped across the full suite",
+      "247 passed, 5 skipped across the full suite",
     ],
   },
   {
@@ -175,15 +175,16 @@ export const ROADMAP: MilestoneItem[] = [
   },
   {
     name: "M4 — Web Chat", status: "in-progress",
-    desc: "Core web chat is implemented; browser JWT auth, durable sessions, and post-call processing remain.",
+    desc: "Core web chat, JWT identity, and optional Redis sessions are implemented; reconnect handling and post-call processing remain.",
     items: [
       "✅ Local /chat demo widget",
       "✅ FastAPI session, message, and history API",
       "✅ Bounded in-process session isolation",
       "✅ Narrow tool surface (no payment execution)",
       "✅ $0.00 anti-pattern prevention",
-      "⬜ Browser JWT auth",
-      "⬜ Durable session store and reconnect handling",
+      "✅ JWT identity boundary and tenant isolation",
+      "✅ Optional Redis-backed session store",
+      "⬜ Reconnect handling",
       "⬜ Post-call processing + analytics",
     ],
   },
