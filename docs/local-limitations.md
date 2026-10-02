@@ -27,7 +27,7 @@ This script:
 
 | Capability | Status | How to Use |
 |---|---|---|
-| **Full test suite** | ✅ 236 passed, 5 skipped | `pytest -v` |
+| **Full test suite** | ✅ 241 passed, 5 skipped | `pytest -v` |
 | **Mock FAC API** | ✅ Running in Docker | `curl http://localhost:9000/accounts/ACC-001/overview` |
 | **Mock Payment Provider** | ✅ Running in Docker | `curl http://localhost:9001/health` |
 | **Agent routing** | ✅ Fully working | CLI or tests — router classifies intents correctly |
@@ -43,6 +43,8 @@ This script:
 | **Jaeger (traces UI)** | ✅ Running in Docker | `http://localhost:16686` |
 | **Deterministic eval runner** | ✅ Fully working | `python -m evals.runner --cases evals/cases.json` |
 | **Privacy-aware turn traces** | ✅ Fully working | Set `TRACE_JSONL_PATH=./var/traces.jsonl` |
+| **Voice transcript turns** | ✅ Fully working | `POST /api/voice/sessions/{id}/turns` with `transcript` |
+| **ElevenLabs STT/TTS adapter** | ✅ Tested without network | Configure `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` |
 
 ---
 
@@ -52,7 +54,8 @@ This script:
 |---|---|---|---|
 | **LLM-powered responses** | OpenAI API credits | $5-20/mo for testing | Use `--no-llm` flag for deterministic mode (predefined responses, routing still works) |
 | **Real SMS messages** | Twilio account | $15/mo + per-message | Not yet implemented (M3). Mock webhook receiver included. |
-| **Real voice calls** | LiveKit + ASR/TTS | Varies | Not yet implemented (M5). |
+| **ElevenLabs audio** | ElevenLabs API key and voice ID | Usage-based | Transcript-only mode is free and deterministic |
+| **Real-time voice calls** | LiveKit + WebRTC transport | Varies | LiveKit/VAD/interruptions remain in M5 |
 
 **Bottom line:** You can run the entire system locally for $0. The only thing that costs money is making the LLM generate intelligent responses instead of deterministic stubs. Everything else — routing, safety boundaries, tools, state machine, tests, visualizer — works for free.
 
@@ -65,7 +68,7 @@ This script:
 | **M2: Compliance Engine + Temporal** | Cross-channel arbitration and replay tests remain; core engine and workflows are implemented | In progress |
 | **M3: SMS Channel** | Twilio webhook handler, inbound coalescing, outbound pipeline, compliance keyword detection | Future |
 | **M4: Web Chat** | JWT auth, durable sessions, reconnect handling, post-call processing remain; local API/widget works | In progress |
-| **M5: Voice** | LiveKit, ASR/TTS, VAD, DTMF protected collection, interruption handling | Future |
+| **M5: Voice** | ElevenLabs adapter and turn API are implemented; LiveKit/WebRTC, VAD, DTMF protected collection, and interruption handling remain | In progress |
 | **M6: Observability + Evals** | Deterministic eval runner and privacy-aware traces are implemented; dashboards, OTLP export, and model-quality evals remain | In progress |
 
 ---
@@ -76,7 +79,7 @@ This script:
 ```bash
 cd /Users/ianlu/agentic-servicing-platform
 source .venv/bin/activate
-pytest -v                          # 236 passed, 5 skipped
+pytest -v                          # 241 passed, 5 skipped
 pytest taylor/tests/test_router.py -v   # just router tests
 pytest taylor/tests/test_state.py -v    # just state/reducer tests
 ```
@@ -103,6 +106,21 @@ TRACE_JSONL_PATH=./var/traces.jsonl \
 
 Trace records contain correlation IDs, routing, gate decisions, tool counts, usage
 metadata, and duration. Raw utterances and protected tokens are excluded.
+
+### Voice channel
+```bash
+# Free transcript-only path
+curl -X POST http://localhost:8000/api/voice/sessions \
+  -H "Content-Type: application/json" -d '{"customer_id":"cust_demo_001"}'
+
+curl -X POST http://localhost:8000/api/voice/sessions/<session_id>/turns \
+  -H "Content-Type: application/json" \
+  -d '{"transcript":"What is my balance?","synthesize":false}'
+```
+
+Set `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` to enable audio transcription
+and MP3 synthesis. The current adapter is request/response based; the LiveKit
+real-time transport is not yet implemented.
 Commands within the CLI:
 - `/auth step_up` — upgrade to step-up auth (unlocks sensitive actions)
 - `/channel chat` — switch to chat channel (blocks payment execution)
@@ -179,7 +197,7 @@ Your Machine (Docker)
 Your Machine (Python)
 ├── Taylor Agent Core           ← LangGraph, tools, state machine
 ├── CLI                         ← Interactive conversation interface
-└── 241 collected tests         ← 236 passed, 5 skipped
+└── 246 collected tests         ← 241 passed, 5 skipped
 
 Your Browser
 └── Agent Visualizer            ← Interactive graph view (frontend/index.html)
@@ -194,6 +212,10 @@ A: Not yet. In deterministic mode, the agent gives predefined responses based on
 
 **Q: Can I receive real SMS messages?**
 A: Not yet. SMS channel implementation is Milestone 3. The mock SMS provider is included for testing the webhook handler when it's built.
+
+**Q: Can I use voice locally?**
+A: Yes, with transcript-only turns at no cost. ElevenLabs STT/TTS requires
+credentials. Full real-time calls still require the planned LiveKit transport.
 
 **Q: Does the database work?**
 A: PostgreSQL runs in Docker and the schema is created on startup. The turn coordinator persists sessions, tool actions, authorization artifacts, and audit events. However, database persistence is non-fatal — if PostgreSQL is down, the system still works (it just doesn't persist).

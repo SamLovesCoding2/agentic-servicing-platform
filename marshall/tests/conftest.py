@@ -15,13 +15,16 @@ from fastapi.testclient import TestClient
 
 from marshall.app.main import app
 from marshall.app.sessions import chat_sessions
+from marshall.app.voice_sessions import voice_sessions
 
 
 @pytest.fixture(autouse=True)
 def _clean_sessions():
     chat_sessions.clear()
+    voice_sessions.clear()
     yield
     chat_sessions.clear()
+    voice_sessions.clear()
 
 
 @pytest.fixture

@@ -130,7 +130,7 @@ export const IMPLEMENTATION: ImplItem[] = [
   { component: "LLM Integration (OpenAI)", status: "wired", detail: "Reasoning engine, route-specific prompts, tool calling — needs API credits" },
   { component: "Database Persistence", status: "wired", detail: "SQLAlchemy async: tool_actions, authorization_artifacts, sessions, audit_events" },
   { component: "Interactive CLI", status: "operational", detail: "Real conversations through the safety system (deterministic + LLM modes)" },
-  { component: "Test Suite", status: "operational", detail: "236 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
+  { component: "Test Suite", status: "operational", detail: "241 passed, 5 skipped; graph, policy, workflow, chat, and eval coverage" },
   { component: "Agent Graph Visualizer", status: "operational", detail: "This React/TypeScript UI you're looking at right now" },
 ];
 
@@ -147,7 +147,7 @@ export const ROADMAP: MilestoneItem[] = [
       "Intent router with channel + auth constraints",
       "Evidence completion gate",
       "Mock FAC API + mock payment provider",
-      "236 passed, 5 skipped across the full suite",
+      "241 passed, 5 skipped across the full suite",
     ],
   },
   {
@@ -188,15 +188,17 @@ export const ROADMAP: MilestoneItem[] = [
     ],
   },
   {
-    name: "M5 — Voice Channel", status: "planned",
-    desc: "LiveKit-based voice with ASR/TTS, DTMF protected collection, and interruption handling.",
+    name: "M5 — Voice Channel", status: "in-progress",
+    desc: "ElevenLabs STT/TTS adapter and voice-session API are implemented; real-time LiveKit transport remains.",
     items: [
-      "LiveKit server (self-hosted)",
-      "ASR + TTS pipeline",
-      "VAD + endpointing",
-      "DTMF protected collection (credentials bypass LLM)",
-      "Interruption handling (cancel in-flight model)",
-      "Disconnect-during-execution recovery",
+      "✅ ElevenLabs speech-to-text adapter",
+      "✅ ElevenLabs text-to-speech adapter",
+      "✅ Transcript-only deterministic voice turns",
+      "✅ Server-owned voice sessions and bounded history",
+      "⬜ LiveKit server integration",
+      "⬜ VAD + endpointing",
+      "⬜ DTMF protected collection",
+      "⬜ Interruption and disconnect recovery",
     ],
   },
   {

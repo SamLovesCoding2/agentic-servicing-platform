@@ -179,6 +179,36 @@ Chat is architecturally barred from payment execution: the router blocks
 `sensitive_action` on the chat channel and the channel tool override omits
 `schedule_payment`.
 
+### Running the Voice Channel (M5)
+
+The voice channel keeps Taylor as the agent and uses ElevenLabs at the media
+boundary. Transcript-only turns are free and deterministic. Audio transcription
+and speech synthesis require an ElevenLabs API key and voice ID.
+
+```bash
+# Optional .env values:
+ELEVENLABS_API_KEY=your-key
+ELEVENLABS_VOICE_ID=your-voice-id
+
+MARSHALL_LLM_ENABLED=0 uvicorn marshall.app.main:app --port 8000
+```
+
+Create a voice session and run a transcript-only turn:
+
+```bash
+curl -X POST http://localhost:8000/api/voice/sessions \
+  -H "Content-Type: application/json" -d '{"customer_id":"cust_demo_001"}'
+
+curl -X POST http://localhost:8000/api/voice/sessions/<session_id>/turns \
+  -H "Content-Type: application/json" \
+  -d '{"transcript":"What happens if I miss a payment?","synthesize":false}'
+```
+
+With ElevenLabs configured, send `audio_base64` instead of `transcript` to use
+speech-to-text, or set `synthesize` to `true` to receive base64-encoded MP3
+audio. LiveKit/WebRTC streaming, VAD, interruption handling, and DTMF
+protected collection remain the next voice milestone.
+
 ### Running Temporal Durable Workflows (M2)
 
 Start a Temporal server with the `m2` compose profile, then run the worker:
@@ -232,7 +262,7 @@ agentic-servicing-platform/
 | M2 | 🚧 In progress | **Compliance engine done** (stateless, strictest-wins, fail-closed); **Temporal durable workflows done** (payment arrangement + UNKNOWN reconciliation) |
 | M3 | Planned | SMS channel (Twilio/webhook) |
 | M4 | 🚧 In progress | **Web chat channel done** (session + message API, `/chat` demo widget, payments blocked on chat); JWT auth pending |
-| M5 | Planned | Voice channel (LiveKit + ASR/TTS) |
+| M5 | 🚧 In progress | **ElevenLabs STT/TTS adapter + voice-session API done**; LiveKit/WebRTC streaming, VAD, interruption handling, and DTMF collection remain |
 | M6 | 🚧 In progress | **Deterministic eval runner + privacy-aware turn traces done**; OpenTelemetry exporter configuration, dashboards, and broader model-quality evals remain |
 
 ## Parody Naming

@@ -14,6 +14,7 @@ Channel-safety invariants:
 
 from __future__ import annotations
 
+import base64
 import logging
 import os
 from typing import Any
@@ -23,6 +24,13 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from marshall.app.sessions import chat_sessions
+from marshall.app.voice_provider import (
+    ElevenLabsVoiceProvider,
+    VoiceProvider,
+    VoiceProviderError,
+    decode_audio_base64,
+)
+from marshall.app.voice_sessions import voice_sessions
 from taylor.graphs.universal.state import Channel
 from taylor.runtime.text_runtime import TextRuntime
 
@@ -33,6 +41,21 @@ app = FastAPI(
     version="0.2.0",
     description="Agentic Servicing Platform backend",
 )
+
+
+def create_voice_provider() -> VoiceProvider:
+    """Create the configured voice adapter without requiring paid credentials."""
+    return ElevenLabsVoiceProvider()
+
+
+_VOICE_PROVIDER: VoiceProvider | None = None
+
+
+def voice_provider() -> VoiceProvider:
+    global _VOICE_PROVIDER
+    if _VOICE_PROVIDER is None:
+        _VOICE_PROVIDER = create_voice_provider()
+    return _VOICE_PROVIDER
 
 
 def create_runtime() -> TextRuntime:
@@ -76,6 +99,33 @@ class MessageResponse(BaseModel):
     exit_state: str
     gate_passed: bool
     success_language_allowed: bool
+    action_status: str | None = None
+
+
+class CreateVoiceSessionRequest(BaseModel):
+    customer_id: str = Field(default="cust_demo_001", description="Demo customer tag.")
+    auth_level: str = Field(
+        default="verified",
+        description="Server-assigned auth level (anonymous | verified).",
+    )
+
+
+class VoiceTurnRequest(BaseModel):
+    transcript: str | None = Field(default=None, min_length=1, max_length=4_000)
+    audio_base64: str | None = Field(default=None, max_length=12_000_000)
+    audio_content_type: str = Field(default="audio/mpeg", max_length=100)
+    synthesize: bool = True
+
+
+class VoiceTurnResponse(BaseModel):
+    transcript: str
+    reply: str
+    route: str
+    exit_state: str
+    gate_passed: bool
+    audio_base64: str | None = None
+    audio_content_type: str | None = None
+    audio_status: str
     action_status: str | None = None
 
 
@@ -148,6 +198,118 @@ async def get_chat_history(session_id: str) -> dict[str, Any]:
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
     return {"session_id": session_id, "messages": session.messages}
+
+
+# ── Voice channel ────────────────────────────────────────────────────────────
+
+@app.post("/api/voice/sessions")
+async def create_voice_session(body: CreateVoiceSessionRequest) -> dict[str, Any]:
+    """Create a voice session with server-owned identity."""
+    if body.auth_level not in ("anonymous", "verified"):
+        raise HTTPException(
+            status_code=400,
+            detail="auth_level must be anonymous or verified",
+        )
+    session = voice_sessions.create(
+        customer_id=body.customer_id,
+        auth_level=body.auth_level,
+    )
+    provider = voice_provider()
+    return {
+        "session_id": session.session_id,
+        "conversation_id": session.conversation_id,
+        "customer_id": session.customer_id,
+        "auth_level": session.auth_level.value,
+        "provider": "elevenlabs" if provider.available else "unconfigured",
+    }
+
+
+@app.post("/api/voice/sessions/{session_id}/turns")
+async def send_voice_turn(
+    session_id: str,
+    body: VoiceTurnRequest,
+) -> VoiceTurnResponse:
+    """Transcribe optional audio, run Taylor, and optionally synthesize a reply.
+
+    Transcript input makes the endpoint usable without paid services. Audio
+    input requires a configured ElevenLabs provider.
+    """
+    session = voice_sessions.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="voice session not found")
+    if body.transcript is None and body.audio_base64 is None:
+        raise HTTPException(
+            status_code=422,
+            detail="provide transcript or audio_base64",
+        )
+    if body.transcript is not None and body.audio_base64 is not None:
+        raise HTTPException(
+            status_code=422,
+            detail="provide transcript or audio_base64, not both",
+        )
+    if not body.audio_content_type.startswith("audio/"):
+        raise HTTPException(status_code=422, detail="audio_content_type must be audio/*")
+
+    transcript = body.transcript
+    provider = voice_provider()
+    if body.audio_base64 is not None:
+        if not provider.available:
+            raise HTTPException(
+                status_code=503,
+                detail="voice transcription provider is not configured",
+            )
+        try:
+            audio = decode_audio_base64(body.audio_base64)
+            transcript = await provider.transcribe(audio, body.audio_content_type)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except VoiceProviderError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    assert transcript is not None
+    result = await runtime().run_turn(
+        utterance=transcript,
+        conversation_id=session.conversation_id,
+        customer_id=session.customer_id,
+        auth_level=session.auth_level,
+        channel=Channel.VOICE,
+    )
+    session.append_turn(transcript, result["reply"])
+
+    audio_base64 = None
+    audio_status = "not_requested"
+    if body.synthesize:
+        if not provider.available:
+            audio_status = "provider_unconfigured"
+        else:
+            try:
+                audio = await provider.synthesize(result["reply"])
+                audio_base64 = base64.b64encode(audio).decode("ascii")
+                audio_status = "ready"
+            except VoiceProviderError:
+                logger.warning("Voice synthesis failed", exc_info=True)
+                audio_status = "provider_error"
+
+    gate = result.get("gate_result") or {}
+    return VoiceTurnResponse(
+        transcript=transcript,
+        reply=result["reply"],
+        route=str(result["route"]),
+        exit_state=str(result["exit_state"]),
+        gate_passed=bool(gate.get("gate_passed", False)),
+        audio_base64=audio_base64,
+        audio_content_type="audio/mpeg" if audio_base64 else None,
+        audio_status=audio_status,
+        action_status=result.get("action_status"),
+    )
+
+
+@app.get("/api/voice/sessions/{session_id}/turns")
+async def get_voice_history(session_id: str) -> dict[str, Any]:
+    session = voice_sessions.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="voice session not found")
+    return {"session_id": session_id, "turns": session.turns}
 
 
 # ── Minimal widget (local demo only) ─────────────────────────────────────────
